@@ -30,5 +30,31 @@ void USART_init()
     gpioConfig.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     gpioConfig.GPIO_Pin = GPIO_Pin_10;
     GPIO_Init(GPIOA, &gpioConfig);
+
+    /* Enable RXNE interrupt */
+    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+    /* Enable USART1 global interrupt */
+    NVIC_EnableIRQ(USART1_IRQn);
+}
+
+
+/**********************************************************
+ * USART1 interrupt request handler: on reception of a
+ * character 't', toggle LED and transmit a character 'T'
+ *********************************************************/
+void USART1_IRQHandler(void)
+{
+    /* RXNE handler */
+    if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
+    {
+        /* If received 't', toggle LED and transmit 'T' */
+        if((char)USART_ReceiveData(USART1) == 't')
+        {
+            USART_SendData(USART1, 'T');
+        }
+    }
+
+    /* ------------------------------------------------------------ */
+    /* Other USART1 interrupts handler can go here ...             */
 }
 
