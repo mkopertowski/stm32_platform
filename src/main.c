@@ -58,34 +58,33 @@
 int
 main(int argc, char* argv[])
 {
-	USART_init();
+    BT740_init();
 
-  // Send a greeting to the trace device (skipped on Release).
-  trace_puts("Hello ARM World!");
+    // Send a greeting to the trace device (skipped on Release).
+    trace_puts("Hello ARM World!");
 
-  // At this stage the system clock should have already been configured
-  // at high speed.
-  trace_printf("System clock: %u Hz\n", SystemCoreClock);
+    // At this stage the system clock should have already been configured
+    // at high speed.
+    trace_printf("System clock: %u Hz\n", SystemCoreClock);
 
-  timer_start();
+    timer_start();
 
-  blink_led_init();
+    blink_led_init();
   
-  uint32_t seconds = 0;
+    uint32_t seconds = 0;
 
-  // Infinite loop
-  while (1)
-    {
-      blink_led_on();
-      timer_sleep(seconds == 0 ? TIMER_FREQUENCY_HZ : BLINK_ON_TICKS);
+    // Infinite loop
+    while (1) {
+        blink_led_on();
+        timer_sleep(seconds == 0 ? TIMER_FREQUENCY_HZ : BLINK_ON_TICKS);
 
-      blink_led_off();
-      timer_sleep(BLINK_OFF_TICKS);
+        blink_led_off();
+        timer_sleep(BLINK_OFF_TICKS);
 
-      ++seconds;
+        ++seconds;
 
-      // Count seconds on the trace device.
-      trace_printf("Second %u\n", seconds);
+        // Count seconds on the trace device.
+        trace_printf("Second %u\n", seconds);
     }
   // Infinite loop, never return.
 }

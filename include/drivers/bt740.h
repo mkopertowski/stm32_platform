@@ -3,8 +3,7 @@
 
 #include "stm32f10x.h"
 
-void USART_init();
-
+void BT740_init(void);
 // ----------------------------------------------------------------------------
 
 #endif // USART_H_

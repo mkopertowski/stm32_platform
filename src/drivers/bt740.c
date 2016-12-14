@@ -1,9 +1,11 @@
+#include <drivers/bt740.h>
 #include "stm32f10x_usart.h"
 #include "stm32f10x.h"
 
-#include "usart.h"
 
-void USART_init()
+
+
+void BT740_init(void)
 {
     USART_InitTypeDef usartConfig;
 
