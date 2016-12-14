@@ -2,6 +2,11 @@
 #include "stm32f10x_usart.h"
 #include "stm32f10x.h"
 
+#define CMD_LENGTH_MAX (20)
+
+typedef struct {
+    char cmdString[CMD_LENGTH_MAX];
+} CMD_INFO;
 
 
 
