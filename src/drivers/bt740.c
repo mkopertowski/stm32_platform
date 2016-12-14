@@ -1,14 +1,22 @@
 #include <drivers/bt740.h>
 #include "stm32f10x_usart.h"
 #include "stm32f10x.h"
+#include "global.h"
 
 #define CMD_LENGTH_MAX (20)
+#define RESPONSE_BUFFER_MAX (20)
 
 typedef struct {
     char cmdString[CMD_LENGTH_MAX];
 } CMD_INFO;
 
+struct response {
+    uint8_t buffer[RESPONSE_BUFFER_MAX];
+    uint8_t index;
+    bool ready;
+};
 
+static struct response cmdResponse;
 
 void BT740_init(void)
 {
@@ -54,14 +62,12 @@ void USART1_IRQHandler(void)
     /* RXNE handler */
     if(USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
     {
-        /* If received 't', toggle LED and transmit 'T' */
-        if((char)USART_ReceiveData(USART1) == 't')
-        {
-            USART_SendData(USART1, 'T');
+        cmdResponse.buffer[cmdResponse.index] = (uint8_t)USART_ReceiveData(USART1);
+        cmdResponse.index++;
+        if(cmdResponse.index == RESPONSE_BUFFER_MAX) {
+            cmdResponse.index = 0;
         }
     }
 
-    /* ------------------------------------------------------------ */
-    /* Other USART1 interrupts handler can go here ...             */
 }
 

@@ -7,9 +7,8 @@
 #define GLOBAL_H
 
 typedef enum {
-  FALSE = 0,
-  TRUE
+    false = 0,
+    true
 } bool;
-
 
 #endif /* GLOBAL_H */
