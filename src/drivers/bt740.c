@@ -18,7 +18,7 @@ struct response {
 
 static struct response cmdResponse;
 
-void BT740_init(void)
+static void usart_config(void)
 {
     USART_InitTypeDef usartConfig;
 
@@ -50,6 +50,17 @@ void BT740_init(void)
     USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
     /* Enable USART1 global interrupt */
     NVIC_EnableIRQ(USART1_IRQn);
+
+}
+
+void BT740_init(void)
+{
+    bt_cmd_t cmd;
+
+    usart_config();
+
+    /* */
+    //BT740_sendCmd();
 }
 
 

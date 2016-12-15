@@ -7,23 +7,25 @@
 typedef enum {
     BT_CMD_UNKNOWN,
     BT_CMD_STATUS_CHECK,
+    BT_CMD_WRITE_SREG_DISCOVERABLE,
+    BT_CMD_WRITE_SREG_CONNECTABLE,
     BT_CMD_LAST,
-} BT_CMD_TYPE;
+} bt_cmd_type_t;
 
 typedef union {
     uint8_t param;
-} BT_CMD_PARAMS;
+} bt_cmd_params_t;
 
 typedef struct {
-    BT_CMD_TYPE type;
-    BT_CMD_PARAMS params;
-} BT_CMD;
+    bt_cmd_type_t type;
+    bt_cmd_params_t params;
+} bt_cmd_t;
 
 typedef union {
     uint8_t error_code;
-} BT_RESPONSE;
+} bt_cmd_response_t;
 
 void BT740_init(void);
-bool BT740_sendCmd(BT_CMD *cmd, BT_RESPONSE *response);
+bool BT740_sendCmd(bt_cmd_t *cmd, bt_cmd_response_t *response);
 
 #endif // BT740

@@ -9,6 +9,11 @@
 #include <stdlib.h>
 #include "diag/Trace.h"
 
+/* Scheduler includes. */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+
 #include "Timer.h"
 #include "BlinkLed.h"
 
@@ -46,6 +51,8 @@
 #define BLINK_ON_TICKS  (TIMER_FREQUENCY_HZ * 3 / 4)
 #define BLINK_OFF_TICKS (TIMER_FREQUENCY_HZ - BLINK_ON_TICKS)
 
+#define mainECHO_TASK_PRIORITY              ( tskIDLE_PRIORITY + 1 )
+
 // ----- main() ---------------------------------------------------------------
 
 // Sample pragmas to cope with warnings. Please note the related line at
@@ -55,8 +62,18 @@
 #pragma GCC diagnostic ignored "-Wmissing-declarations"
 #pragma GCC diagnostic ignored "-Wreturn-type"
 
-int
-main(int argc, char* argv[])
+ // Block for 500ms.
+ const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+
+void my_task()
+{
+    while(1) {
+        trace_puts("hello from my-task\n");
+        vTaskDelay( xDelay );
+    }
+}
+
+int main(int argc, char* argv[])
 {
     BT740_init();
 
@@ -68,25 +85,14 @@ main(int argc, char* argv[])
     trace_printf("System clock: %u Hz\n", SystemCoreClock);
 
     timer_start();
-
-    blink_led_init();
   
-    uint32_t seconds = 0;
+    xTaskCreate( my_task, "my_task", configMINIMAL_STACK_SIZE, NULL, mainECHO_TASK_PRIORITY, NULL );
+
+    /* Start the scheduler. */
+    vTaskStartScheduler();
 
     // Infinite loop
-    while (1) {
-        blink_led_on();
-        timer_sleep(seconds == 0 ? TIMER_FREQUENCY_HZ : BLINK_ON_TICKS);
-
-        blink_led_off();
-        timer_sleep(BLINK_OFF_TICKS);
-
-        ++seconds;
-
-        // Count seconds on the trace device.
-        trace_printf("Second %u\n", seconds);
-    }
-  // Infinite loop, never return.
+    for(;;);
 }
 
 #pragma GCC diagnostic pop
