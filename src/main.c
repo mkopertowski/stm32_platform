@@ -65,13 +65,7 @@
  // Block for 500ms.
  const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
 
-void my_task()
-{
-    while(1) {
-        trace_puts("hello from my-task\n");
-        vTaskDelay( xDelay );
-    }
-}
+void app_task(void);
 
 int main(int argc, char* argv[])
 {
@@ -86,7 +80,7 @@ int main(int argc, char* argv[])
 
     timer_start();
   
-    xTaskCreate( my_task, "my_task", configMINIMAL_STACK_SIZE, NULL, mainECHO_TASK_PRIORITY, NULL );
+    xTaskCreate( app_task, "app_task", configMINIMAL_STACK_SIZE, NULL, mainECHO_TASK_PRIORITY, NULL );
 
     /* Start the scheduler. */
     vTaskStartScheduler();
