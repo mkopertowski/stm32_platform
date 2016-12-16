@@ -16,4 +16,7 @@
                 ret; \
         })
 
+#define APP_SOME_NOTIFICATION_NOTIF       (1 << 1)
+
+
 #endif /* OS_H */

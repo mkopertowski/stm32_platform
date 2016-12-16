@@ -7,9 +7,8 @@
 #include <semphr.h>
 #include <task.h>
 #include <timers.h>
+#include <projdefs.h>
 #include <os.h>
-
-#define APP_SOME_NOTIFICATION_NOTIF       (1 << 1)
 
 struct context {
     TaskHandle_t app_task;
@@ -17,7 +16,7 @@ struct context {
 
 struct context ctx = { 0 };
 
-static void some_action()
+void app_some_action(void)
 {
     OS_TASK_NOTIFY(ctx.app_task, APP_SOME_NOTIFICATION_NOTIF);
 }
@@ -30,12 +29,15 @@ void app_task(void)
 
     for (;;) {
         BaseType_t ret;
-        uint32_t notif;
+        uint32_t notification;
 
         /* Wait on any of the event group bits, then clear them all */
-        ret = xTaskNotifyWait(0, OS_TASK_NOTIFY_MASK, &notif, pdMS_TO_TICKS(50));
+        ret = xTaskNotifyWait(0, OS_TASK_NOTIFY_MASK, &notification, pdMS_TO_TICKS(50));
 
         if (ret == pdPASS) {
+            if (notification & APP_SOME_NOTIFICATION_NOTIF) {
+                trace_puts("Task notified by some action!\r\n");
+            }
         }
     }
 }
