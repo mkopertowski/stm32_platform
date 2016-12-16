@@ -7,9 +7,7 @@
 #include <semphr.h>
 #include <task.h>
 #include <timers.h>
-
-#define OS_TIME_TO_TICKS(time_in_ms) pdMS_TO_TICKS(time_in_ms)
-#define OS_TASK_NOTIFY_ALL_BITS 0xFFFFFFFF
+#include <os.h>
 
 #define APP_SOME_NOTIFICATION_NOTIF       (1 << 1)
 
@@ -19,18 +17,9 @@ struct context {
 
 struct context ctx = { 0 };
 
-#define OS_TASK_NOTIFY_FROM_ISR(task, value, action) \
-        ({ \
-                BaseType_t need_switch, ret; \
-                ret = xTaskNotifyFromISR(task, value, action, &need_switch); \
-                portEND_SWITCHING_ISR(need_switch); \
-                ret; \
-        })
-
-
 static void some_action()
 {
-    OS_TASK_NOTIFY_FROM_ISR(ctx.app_task, APP_SOME_NOTIFICATION_NOTIF, eSetBits);
+    OS_TASK_NOTIFY(ctx.app_task, APP_SOME_NOTIFICATION_NOTIF);
 }
 
 void app_task(void)
@@ -44,7 +33,7 @@ void app_task(void)
         uint32_t notif;
 
         /* Wait on any of the event group bits, then clear them all */
-        ret = xTaskNotifyWait(0, OS_TASK_NOTIFY_ALL_BITS, &notif, OS_TIME_TO_TICKS(50));
+        ret = xTaskNotifyWait(0, OS_TASK_NOTIFY_MASK, &notif, pdMS_TO_TICKS(50));
 
         if (ret == pdPASS) {
         }
