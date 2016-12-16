@@ -21,7 +21,7 @@ void app_some_action(void)
     OS_TASK_NOTIFY(ctx.app_task, APP_SOME_NOTIFICATION_NOTIF);
 }
 
-void app_task(void)
+void app_task(void *params)
 {
     trace_puts("Application task started!\r\n");
 

@@ -8,6 +8,8 @@
 
 #define OS_TASK_NOTIFY_MASK 0xFFFFFFFF
 
+#define OS_TASK_PRIORITY              ( tskIDLE_PRIORITY + 1 )
+
 #define OS_TASK_NOTIFY(task, value) \
         ({ \
                 BaseType_t need_switch, ret; \
@@ -18,5 +20,6 @@
 
 #define APP_SOME_NOTIFICATION_NOTIF       (1 << 1)
 
+#define BT740_RECEIVE_NOTIF               (1 << 10)
 
 #endif /* OS_H */
