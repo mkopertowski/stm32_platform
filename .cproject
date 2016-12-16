@@ -67,6 +67,8 @@
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1481955904" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1195872436" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;../include&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../include/app&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../include/drivers&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;../system/include/FreeRTOS&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;../system/include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;../system/include/cmsis&quot;"/>
