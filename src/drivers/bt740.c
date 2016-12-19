@@ -91,7 +91,7 @@ void BT740_init(void)
 
 void send_char(char c)
 {
-    while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET);
+    while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
     USART_SendData(USART1, c);
 }
 

@@ -25,7 +25,7 @@ void app_task(void *params)
 {
     uint8_t send_notif = 0;
 
-    trace_puts("Application task started!\r\n");
+    trace_printf("Application task started!\r\n");
 
     ctx.app_task = xTaskGetCurrentTaskHandle();
 
@@ -38,7 +38,7 @@ void app_task(void *params)
 
         if (ret == pdPASS) {
             if (notification & APP_SOME_NOTIFICATION_NOTIF) {
-                trace_puts("Task notified by some action!\r\n");
+                trace_printf("Task notified by some action!\r\n");
             }
         } else if (!send_notif) {
             app_some_action();

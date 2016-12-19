@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "diag/Trace.h"
 
+#include <debug.h>
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -38,20 +39,25 @@
  const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
 
 void app_task(void *params);
-static void prvSetupHardware(void);
+void USART1Init();
 
 int main(int argc, char* argv[])
 {
-    //prvSetupHardware();
+    //debug_init();
     //BT740_init();
-
+    //by default stdin/stdout are on usart2
+    USART1Init();
+      // turn off buffers, so IO occurs immediately
+//      setvbuf(stdin, NULL, _IONBF, 0);
+  //    setvbuf(stdout, NULL, _IONBF, 0);
+    //  setvbuf(stderr, NULL, _IONBF, 0);
     // Send a greeting to the trace device (skipped on Release).
-    trace_puts("Hello ARM World!");
+   //printf("H");
 
     // At this stage the system clock should have already been configured
     // at high speed.
-    trace_printf("System clock: %u Hz\n", SystemCoreClock);
-
+    trace_printf("System clock: %u Hz\r\n", SystemCoreClock);
+    //trace_putchar("a");
     //timer_start();
   
     xTaskCreate(app_task, "app_task", 512, NULL, OS_TASK_PRIORITY, NULL);
@@ -63,21 +69,44 @@ int main(int argc, char* argv[])
     for(;;);
 }
 
-static void prvSetupHardware(void)
-{
-    /* Ensure all priority bits are assigned as preemption priority bits
-    if using a ARM Cortex-M microcontroller. */
-    NVIC_SetPriorityGrouping(0);
-
-    /* TODO: Setup the clocks, etc. here, if they were not configured before
-    main() was called. */
-}
-
-vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
+void vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
 {
     trace_puts("Stack overflow");
 }
 
+void USART1Init(void)
+{
+    USART_InitTypeDef usartConfig;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1 | RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE);
+    USART_Cmd(USART1, ENABLE);
+
+    usartConfig.USART_BaudRate = 9600;
+    usartConfig.USART_WordLength = USART_WordLength_8b;
+    usartConfig.USART_StopBits = USART_StopBits_1;
+    usartConfig.USART_Parity = USART_Parity_No;
+    usartConfig.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+    usartConfig.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_Init(USART1, &usartConfig);
+
+    GPIO_InitTypeDef gpioConfig;
+
+    //PA9 = USART1.TX => Alternative Function Output
+    gpioConfig.GPIO_Mode = GPIO_Mode_AF_PP;
+    gpioConfig.GPIO_Pin = GPIO_Pin_9;
+    gpioConfig.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_Init(GPIOA, &gpioConfig);
+
+    //PA10 = USART1.RX => Input
+    gpioConfig.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    gpioConfig.GPIO_Pin = GPIO_Pin_10;
+    GPIO_Init(GPIOA, &gpioConfig);
+
+    /* Enable RXNE interrupt */
+    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
+    /* Enable USART1 global interrupt */
+    NVIC_EnableIRQ(USART1_IRQn);
+}
 #pragma GCC diagnostic pop
 
 // ----------------------------------------------------------------------------
