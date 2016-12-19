@@ -10,17 +10,16 @@
 #include <sys/unistd.h>
 #include "stm32f10x_usart.h"
 
-
 #ifndef STDOUT_USART
 #define STDOUT_USART 1
 #endif
 
 #ifndef STDERR_USART
-#define STDERR_USART 2
+#define STDERR_USART 1
 #endif
 
 #ifndef STDIN_USART
-#define STDIN_USART 2
+#define STDIN_USART 1
 #endif
 
 #undef errno

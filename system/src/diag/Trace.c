@@ -38,8 +38,7 @@ trace_printf(const char* format, ...)
   if (ret > 0)
     {
       // Transfer the buffer to the device
-      //ret = trace_write (buf, (size_t)ret);
-      ret = _write(STDOUT_FILENO, buf, (size_t)ret);
+      ret = trace_write (buf, (size_t)ret);
     }
 
   va_end (ap);
@@ -56,9 +55,7 @@ trace_puts(const char *s)
 int
 trace_putchar(int c)
 {
-  //trace_write((const char*)&c, 1);
-  while (USART_GetFlagStatus(USART1, USART_FLAG_TXE) == RESET);
-  USART_SendData(USART1, c);
+  trace_write((const char*)&c, 1);
   return c;
 }
 

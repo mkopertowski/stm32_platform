@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "diag/Trace.h"
 
 #include <FreeRTOS.h>
 #include <event_groups.h>
@@ -9,6 +8,9 @@
 #include <timers.h>
 #include <projdefs.h>
 #include <os.h>
+
+#define DEBUG_ON
+#include <debug.h>
 
 struct context {
     TaskHandle_t app_task;
@@ -25,7 +27,7 @@ void app_task(void *params)
 {
     uint8_t send_notif = 0;
 
-    trace_printf("Application task started!\r\n");
+    DEBUG_PRINTF("Application task started!\r\n");
 
     ctx.app_task = xTaskGetCurrentTaskHandle();
 
@@ -38,7 +40,7 @@ void app_task(void *params)
 
         if (ret == pdPASS) {
             if (notification & APP_SOME_NOTIFICATION_NOTIF) {
-                trace_printf("Task notified by some action!\r\n");
+                DEBUG_PRINTF("Task notified by some action!\r\n");
             }
         } else if (!send_notif) {
             app_some_action();
