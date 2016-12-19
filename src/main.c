@@ -38,10 +38,12 @@
  const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
 
 void app_task(void *params);
+static void prvSetupHardware(void);
 
 int main(int argc, char* argv[])
 {
-    BT740_init();
+    //prvSetupHardware();
+    //BT740_init();
 
     // Send a greeting to the trace device (skipped on Release).
     trace_puts("Hello ARM World!");
@@ -50,15 +52,30 @@ int main(int argc, char* argv[])
     // at high speed.
     trace_printf("System clock: %u Hz\n", SystemCoreClock);
 
-    timer_start();
+    //timer_start();
   
-    xTaskCreate( app_task, "app_task", configMINIMAL_STACK_SIZE, NULL, OS_TASK_PRIORITY, NULL );
+    xTaskCreate(app_task, "app_task", 512, NULL, OS_TASK_PRIORITY, NULL);
 
     /* Start the scheduler. */
     vTaskStartScheduler();
 
     // Infinite loop
     for(;;);
+}
+
+static void prvSetupHardware(void)
+{
+    /* Ensure all priority bits are assigned as preemption priority bits
+    if using a ARM Cortex-M microcontroller. */
+    NVIC_SetPriorityGrouping(0);
+
+    /* TODO: Setup the clocks, etc. here, if they were not configured before
+    main() was called. */
+}
+
+vApplicationStackOverflowHook( TaskHandle_t xTask, char *pcTaskName )
+{
+    trace_puts("Stack overflow");
 }
 
 #pragma GCC diagnostic pop

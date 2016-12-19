@@ -23,6 +23,8 @@ void app_some_action(void)
 
 void app_task(void *params)
 {
+    uint8_t send_notif = 0;
+
     trace_puts("Application task started!\r\n");
 
     ctx.app_task = xTaskGetCurrentTaskHandle();
@@ -38,6 +40,9 @@ void app_task(void *params)
             if (notification & APP_SOME_NOTIFICATION_NOTIF) {
                 trace_puts("Task notified by some action!\r\n");
             }
+        } else if (!send_notif) {
+            app_some_action();
+            send_notif = 1;
         }
     }
 }

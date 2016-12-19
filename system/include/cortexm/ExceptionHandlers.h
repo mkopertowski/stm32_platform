@@ -47,6 +47,15 @@ extern "C"
   extern void
   SysTick_Handler (void);
 
+  /*
+   * Exception handlers.
+   */
+  extern void xPortPendSVHandler( void ) ;
+  extern void xPortSysTickHandler( void );
+  extern void vPortSVCHandler( void );
+
+
+
   // Exception Stack Frame of the Cortex-M3 or Cortex-M4 processor.
   typedef struct
   {
