@@ -17,7 +17,6 @@
 #include <bt740.h>
 #include <os.h>
 
-
 #define DEBUG_ON
 #include <debug.h>
 
@@ -40,20 +39,21 @@
  const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
 
 void app_task(void *params);
-void USART1Init();
 
 int main(int argc, char* argv[])
 {
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+
     DEBUG_INIT();
     DEBUG_PRINTF("System clock: %u Hz\r\n", SystemCoreClock);
 
-    //BT740_init();
+    BT740_init();
 
     // At this stage the system clock should have already been configured
     // at high speed.
     //timer_start();
   
-    xTaskCreate(app_task, "app_task", 512, NULL, OS_TASK_PRIORITY, NULL);
+    //xTaskCreate(app_task, "app_task", 512, NULL, OS_TASK_PRIORITY, NULL);
 
     /* Start the scheduler. */
     vTaskStartScheduler();

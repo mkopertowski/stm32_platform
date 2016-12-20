@@ -140,8 +140,10 @@ NVIC value of 255. */
 #define configCOM1_RX_BUFFER_LENGTH		128
 #define configCOM1_TX_BUFFER_LENGTH		128
 
+/* MK: this changes syscall innterrupt priority to zero and things stop to work
 #include <assert.h>
 #define configASSERT(X) assert(X);
+*/
 
 #endif /* FREERTOS_CONFIG_H */
 
