@@ -21,5 +21,6 @@
 #define APP_SOME_NOTIFICATION_NOTIF       (1 << 1)
 
 #define BT740_RESPONSE_READY_NOTIF        (1 << 10)
+#define BT740_SETUP_DONE_NOTIF            (1 << 11)
 
 #endif /* OS_H */

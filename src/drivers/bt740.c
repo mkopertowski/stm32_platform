@@ -4,9 +4,11 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "timers.h"
 
 #include "stm32f10x_usart.h"
 #include "stm32f10x.h"
+#include "Timer.h"
 
 #include <global.h>
 #include <os.h>
@@ -28,11 +30,12 @@ struct response {
     bool ready;
 };
 
-
 struct context {
     TaskHandle_t task;
+    TimerHandle_t bt740_setup_timer;
     bt_cmd_t cmd;
     message_cb msg_cb;
+
 };
 
 static const cmd_info_t commands[] = {
@@ -84,9 +87,6 @@ static void usart_config(void)
 
 void BT740_init(void)
 {
-    /* configure USART2 */
-    usart_config();
-
     /* create task for communication with other devices */
     xTaskCreate(bt740_task, "bt740_task", 1024, NULL, OS_TASK_PRIORITY, NULL);
 }
@@ -98,11 +98,12 @@ void send_char(char c)
     DEBUG_PRINTF("%c",c);
 }
 
-void send_string(const char *s)
+void send_cmd_string(const char *s)
 {
     while (*s) {
         send_char(*s++);
     }
+    send_char('\r'); // send \r character
     DEBUG_PRINTF("\n");
 }
 
@@ -149,22 +150,23 @@ static void bt_response_ready(void)
     OS_TASK_NOTIFY(ctx.task, BT740_RESPONSE_READY_NOTIF);
 }
 
+static void bt740_ready( TimerHandle_t xTimer )
+{
+    OS_TASK_NOTIFY(ctx.task, BT740_SETUP_DONE_NOTIF);
+}
+
 void bt740_task(void *params)
 {
     DEBUG_PRINTF("BT740 task started!\r\n");
 
     ctx.task = xTaskGetCurrentTaskHandle();
 
-    send_string("AT\r");
+    ctx.bt740_setup_timer = xTimerCreate("bt740_tim",pdMS_TO_TICKS(1000),false,(void *)&ctx ,bt740_ready);
 
-    send_string("AT\r");
-    send_string("AT\r");
-    send_string("AT\r");
-    send_string("AT\r");
-    send_string("AT\r");
-    send_string("AT\r");
-    send_string("AT\r");
+    /* configure USART2 */
+    usart_config();
 
+    xTimerStart(ctx.bt740_setup_timer, 0 );
 
     for(;;) {
         BaseType_t ret;
@@ -176,6 +178,9 @@ void bt740_task(void *params)
         if(ret == pdPASS) {
             if (notification & BT740_RESPONSE_READY_NOTIF) {
                 DEBUG_PRINTF("Received:%s\r\n",cmdResponse.buffer);
+            }
+            if (notification & BT740_SETUP_DONE_NOTIF) {
+                send_cmd_string("AT");
             }
         }
     }

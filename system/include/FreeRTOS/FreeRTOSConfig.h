@@ -107,6 +107,11 @@
 #define configQUEUE_REGISTRY_SIZE		0
 #define configGENERATE_RUN_TIME_STATS	0
 
+#define configUSE_TIMERS                1
+#define configTIMER_TASK_PRIORITY               ( configMAX_PRIORITIES - 1 )
+#define configTIMER_QUEUE_LENGTH                6
+#define configTIMER_TASK_STACK_DEPTH            ( configMINIMAL_STACK_SIZE )
+
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
 
@@ -144,6 +149,5 @@ NVIC value of 255. */
 #include <assert.h>
 #define configASSERT(X) assert(X);
 */
-
 #endif /* FREERTOS_CONFIG_H */
 
