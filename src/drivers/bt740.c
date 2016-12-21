@@ -8,7 +8,6 @@
 
 #include "stm32f10x_usart.h"
 #include "stm32f10x.h"
-#include "Timer.h"
 
 #include <global.h>
 #include <os.h>
