@@ -1,9 +1,8 @@
-//
-// This file is part of the GNU ARM Eclipse distribution.
-// Copyright (c) 2014 Liviu Ionescu.
-//
-
-// ----------------------------------------------------------------------------
+/*
+ * ToDO:
+ * 1) thread safe BT740_sendCmd() z callbackiem
+ * 2) modul storage
+ */
 #include <stdio.h>
 #include <stdlib.h>
 /* Scheduler includes. */
