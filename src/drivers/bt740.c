@@ -28,7 +28,7 @@ typedef struct {
 
 typedef struct {
     uint8_t buffer[CMD_RESPONSE_LENGTH_MAX];
-    uint8_t index;
+    uint8_t length;
 } response_t;
 
 struct context {
@@ -144,16 +144,26 @@ void USART2_IRQHandler(void)
     if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)
     {
         received_data = (uint8_t)USART_ReceiveData(USART2);
-        cmdResponse.buffer[cmdResponse.index] = received_data;
-        cmdResponse.index++;
-        if(cmdResponse.index == CMD_RESPONSE_LENGTH_MAX) {
-            cmdResponse.index = 0;
+        cmdResponse.buffer[cmdResponse.length] = received_data;
+        cmdResponse.length++;
+        if(cmdResponse.length == CMD_RESPONSE_LENGTH_MAX) {
+            cmdResponse.length = 0;
         }
         if(received_data == '\r') {
-            queue_put_response();
-            bt_response_ready();
-            cmdResponse.index = 0;
-            memset(cmdResponse.buffer, 0, CMD_RESPONSE_LENGTH_MAX);
+            if(cmdResponse.length == 1) {
+                cmdResponse.length = 0;
+                cmdResponse.buffer[0] = 0;
+            } else {
+                queue_put_response();
+                bt_response_ready();
+                cmdResponse.length = 0;
+                memset(cmdResponse.buffer, 0, CMD_RESPONSE_LENGTH_MAX);
+            }
+        } else if((received_data == '\n') && (cmdResponse.length == 1)) {
+            cmdResponse.length = 0;
+            cmdResponse.buffer[0] = 0;
+        } else {
+            /* wait for some more bytes */
         }
     }
 }
