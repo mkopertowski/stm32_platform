@@ -18,9 +18,17 @@
                 ret; \
         })
 
+#define OS_QUEUE_PUT_FROM_ISR(queue, item) \
+        ({ \
+                BaseType_t need_switch, ret; \
+                ret = xQueueSendToBackFromISR((queue), (item), &need_switch); \
+                portEND_SWITCHING_ISR(need_switch); \
+                ret; \
+        })
+
 #define APP_SOME_NOTIFICATION_NOTIF       (1 << 1)
 
-#define BT740_RESPONSE_READY_NOTIF        (1 << 10)
+#define BT740_RESPONSE_WAITING_NOTIF      (1 << 10)
 #define BT740_SETUP_DONE_NOTIF            (1 << 11)
 
 #endif /* OS_H */

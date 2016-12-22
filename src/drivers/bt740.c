@@ -17,33 +17,35 @@
 #include <debug.h>
 
 #define CMD_LENGTH_MAX (20)
-#define RESPONSE_BUFFER_MAX (20)
+#define CMD_RESPONSE_LENGTH_MAX (40)
+
+#define QUEUE_MAX_ITEMS (5)
+#define QUEUE_ITEM_SIZE (CMD_RESPONSE_LENGTH_MAX)
 
 typedef struct {
     char cmdString[CMD_LENGTH_MAX];
 } cmd_info_t;
 
-struct response {
-    uint8_t buffer[RESPONSE_BUFFER_MAX];
+typedef struct {
+    uint8_t buffer[CMD_RESPONSE_LENGTH_MAX];
     uint8_t index;
-    bool ready;
-};
+} response_t;
 
 struct context {
     TaskHandle_t task;
+    QueueHandle_t queue;
     TimerHandle_t bt740_setup_timer;
     bt_cmd_t cmd;
     message_cb msg_cb;
-
 };
 
 static const cmd_info_t commands[] = {
-        {0},                   // BT_CMD_UNKNOWN
+        {""},                   // BT_CMD_UNKNOWN
         {"AT"},                 // BT_CMD_STATUS_CHECK
         {"AT&W"},               // BT_CMD_WIRTE_S_REGISTER: write S register to non-volatile memory
 };
 
-static struct response cmdResponse;
+static response_t cmdResponse;
 static struct context ctx;
 
 static void bt740_task(void *params);
@@ -125,6 +127,15 @@ void BT740_send_packet(uint8_t *data, uint8_t data_len)
 
 }
 
+static void queue_put_response() {
+    uint8_t *item;
+
+    item = malloc(CMD_RESPONSE_LENGTH_MAX);
+    memcpy(item, cmdResponse.buffer, CMD_RESPONSE_LENGTH_MAX);
+
+    OS_QUEUE_PUT_FROM_ISR(ctx.queue, &item);
+}
+
 void USART2_IRQHandler(void)
 {
     uint8_t received_data;
@@ -135,32 +146,38 @@ void USART2_IRQHandler(void)
         received_data = (uint8_t)USART_ReceiveData(USART2);
         cmdResponse.buffer[cmdResponse.index] = received_data;
         cmdResponse.index++;
-        if(cmdResponse.index == RESPONSE_BUFFER_MAX) {
+        if(cmdResponse.index == CMD_RESPONSE_LENGTH_MAX) {
             cmdResponse.index = 0;
         }
         if(received_data == '\r') {
+            queue_put_response();
             bt_response_ready();
+            cmdResponse.index = 0;
+            memset(cmdResponse.buffer, 0, CMD_RESPONSE_LENGTH_MAX);
         }
     }
 }
 
 static void bt_response_ready(void)
 {
-    OS_TASK_NOTIFY(ctx.task, BT740_RESPONSE_READY_NOTIF);
+    OS_TASK_NOTIFY(ctx.task, BT740_RESPONSE_WAITING_NOTIF);
 }
 
-static void bt740_ready( TimerHandle_t xTimer )
+static void bt740_ready(TimerHandle_t xTimer)
 {
     OS_TASK_NOTIFY(ctx.task, BT740_SETUP_DONE_NOTIF);
 }
 
 void bt740_task(void *params)
 {
+    uint8_t *response;
+
     DEBUG_PRINTF("BT740 task started!\r\n");
 
     ctx.task = xTaskGetCurrentTaskHandle();
+    ctx.queue = xQueueCreate(QUEUE_MAX_ITEMS, QUEUE_ITEM_SIZE);
 
-    ctx.bt740_setup_timer = xTimerCreate("bt740_tim",pdMS_TO_TICKS(1000),false,(void *)&ctx ,bt740_ready);
+    ctx.bt740_setup_timer = xTimerCreate("bt740_tim",pdMS_TO_TICKS(1500),false,(void *)&ctx ,bt740_ready);
 
     /* configure USART2 */
     usart_config();
@@ -175,12 +192,20 @@ void bt740_task(void *params)
         ret = xTaskNotifyWait(0, OS_TASK_NOTIFY_MASK, &notification, pdMS_TO_TICKS(50));
 
         if(ret == pdPASS) {
-            if (notification & BT740_RESPONSE_READY_NOTIF) {
-                DEBUG_PRINTF("Received:%s\r\n",cmdResponse.buffer);
+            if (notification & BT740_RESPONSE_WAITING_NOTIF) {
+                if(!xQueueReceive(ctx.queue, &response, 0)) {
+                    continue;
+                }
+                DEBUG_PRINTF("Received:%s\r\n",response);
+                free(response);
             }
             if (notification & BT740_SETUP_DONE_NOTIF) {
-                send_cmd_string("AT");
+                send_cmd_string("ATE0");
             }
+        }
+
+        if(uxQueueMessagesWaiting(ctx.queue)) {
+            OS_TASK_NOTIFY(ctx.task, BT740_RESPONSE_WAITING_NOTIF);
         }
     }
 }
