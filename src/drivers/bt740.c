@@ -42,6 +42,7 @@ struct context {
 static const cmd_info_t commands[] = {
         {""},                   // BT_CMD_UNKNOWN
         {"AT"},                 // BT_CMD_STATUS_CHECK
+        {"ATE0"},               // BT_CMD_ECHO_OFF
         {"AT&W"},               // BT_CMD_WIRTE_S_REGISTER: write S register to non-volatile memory
 };
 
@@ -108,13 +109,22 @@ void send_cmd_string(const char *s)
     DEBUG_PRINTF("\n");
 }
 
+static sendCmd(bt_cmd_t *cmd)
+{
+    // save command in the context
+    memcpy(&ctx.cmd, cmd, sizeof(bt_cmd_t));
+
+    // send command to BT740 module
+    send_cmd_string(commands[cmd->type].cmdString);
+}
+
 void BT740_sendCmd(bt_cmd_t *cmd, bt_cmd_response_t *response)
 {
     // save command in the context
     memcpy(&ctx.cmd, cmd, sizeof(bt_cmd_t));
 
     // send command to BT740 module
-    send_string(commands[cmd->type].cmdString);
+    send_cmd_string(commands[cmd->type].cmdString);
 }
 
 void BT740_register_for_messages(message_cb cb)
@@ -178,9 +188,15 @@ static void bt740_ready(TimerHandle_t xTimer)
     OS_TASK_NOTIFY(ctx.task, BT740_SETUP_DONE_NOTIF);
 }
 
+static bool is_echoed_cmd(uint8_t *response)
+{
+    return (strncmp(commands[ctx.cmd.type].cmdString, response, strlen(commands[ctx.cmd.type].cmdString)) == 0);
+}
+
 void bt740_task(void *params)
 {
     uint8_t *response;
+    bt_cmd_t cmd;
 
     DEBUG_PRINTF("BT740 task started!\r\n");
 
@@ -206,11 +222,20 @@ void bt740_task(void *params)
                 if(!xQueueReceive(ctx.queue, &response, 0)) {
                     continue;
                 }
+
+                if(is_echoed_cmd(response)) {
+                    free(response);
+                    continue;
+                }
                 DEBUG_PRINTF("Received:%s\r\n",response);
+
+                /* response handling here */
+
                 free(response);
             }
             if (notification & BT740_SETUP_DONE_NOTIF) {
-                send_cmd_string("ATE0");
+                cmd.type = BT_CMD_ECHO_OFF;
+                sendCmd(&cmd);
             }
         }
 
