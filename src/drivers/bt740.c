@@ -1,3 +1,9 @@
+/*
+ * ORANGE GND
+ * BROWN  TX    A3(RX)
+ * YELLOW RX    A2(TX)
+ * BLUE   VCC
+ */
 #include <stdio.h>
 #include <stdlib.h>
 /* Scheduler includes. */
