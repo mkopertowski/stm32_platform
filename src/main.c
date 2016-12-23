@@ -25,6 +25,7 @@
 #include <eeprom.h>
 #include <os.h>
 #include <storage.h>
+#include <io.h>
 
 #define DEBUG_ON
 #include <debug.h>

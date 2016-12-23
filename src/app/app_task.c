@@ -23,6 +23,10 @@ struct context {
 
 struct context ctx = { 0 };
 
+static const bt_cmd_type_t init_commands_sequence[] = {
+        BT_CMD_ECHO_OFF,
+};
+
 void bt_module_state_cb(bt_state_t state)
 {
     OS_TASK_NOTIFY(ctx.app_task, APP_BT_MODULE_READY_NOTIF);
