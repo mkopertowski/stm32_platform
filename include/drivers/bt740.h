@@ -14,6 +14,7 @@ typedef enum {
     BT_CMD_UNKNOWN,
     BT_CMD_STATUS_CHECK,
     BT_CMD_ECHO_OFF,
+    BT_CMD_GET_DEVICES,
     BT_CMD_WIRTE_S_REGISTER,
     BT_CMD_WRITE_SREG_DISCOVERABLE,
     BT_CMD_WRITE_SREG_CONNECTABLE,
@@ -29,9 +30,9 @@ typedef struct {
     bt_cmd_params_t params;
 } bt_cmd_t;
 
-typedef struct response {
+typedef struct response_queue {
     uint8_t data[RESPONSE_DATA_LENGTH];
-    struct response *next;
+    struct response_queue *next;
 } response_queue_t;
 
 typedef void (*message_cb)(uint8_t *data, uint8_t data_len);
@@ -39,7 +40,7 @@ typedef void (*response_cb)(bool status, response_queue_t *resp);
 typedef void (*state_cb)(bt_state_t state);
 
 void BT740_init(void);
-void BT740_sendCmd(bt_cmd_t *cmd, response_cb *cb);
+void BT740_sendCmd(bt_cmd_t *cmd, response_cb cb);
 void BT740_register_for_packets(message_cb cb);
 void BT740_send_packet(uint8_t *data, uint8_t data_len);
 

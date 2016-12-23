@@ -1,10 +1,10 @@
 /*
  * ToDO:
- * - thread safe BT740_sendCmd() z callbackiem
  * - device type to storage (router, end device)
  *
  * Done:
  * - modul storage
+ * - thread safe BT740_sendCmd() z callbackiem
  */
 #include <stdio.h>
 #include <stdlib.h>

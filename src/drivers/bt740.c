@@ -24,17 +24,16 @@
 #include <debug.h>
 
 #define CMD_LENGTH_MAX (20)
-#define CMD_RESPONSE_LENGTH_MAX (40)
 
 #define QUEUE_MAX_ITEMS (5)
-#define QUEUE_ITEM_SIZE (CMD_RESPONSE_LENGTH_MAX)
+#define QUEUE_ITEM_SIZE (RESPONSE_DATA_LENGTH)
 
 typedef struct {
     char cmdString[CMD_LENGTH_MAX];
 } cmd_info_t;
 
 typedef struct {
-    uint8_t buffer[CMD_RESPONSE_LENGTH_MAX];
+    uint8_t buffer[RESPONSE_DATA_LENGTH];
     uint8_t length;
 } response_t;
 
@@ -43,7 +42,9 @@ struct context {
     QueueHandle_t queue;
     TimerHandle_t bt740_setup_timer;
     bt_cmd_t cmd;
-    response_cb *cmd_response_cb;
+    response_cb cmd_response_cb;
+    response_queue_t *response_queue;
+    response_queue_t *response_queue_tail;
     message_cb msg_cb;
     state_cb module_state_cb;
 };
@@ -52,6 +53,7 @@ static const cmd_info_t commands[] = {
         {""},                   // BT_CMD_UNKNOWN
         {"AT"},                 // BT_CMD_STATUS_CHECK
         {"ATE0"},               // BT_CMD_ECHO_OFF
+        {"AT+BTT?"},            // BT_CMD_GET_DEVICES
         {"AT&W"},               // BT_CMD_WIRTE_S_REGISTER: write S register to non-volatile memory
 };
 
@@ -118,16 +120,7 @@ void send_cmd_string(const char *s)
     DEBUG_PRINTF("\n");
 }
 
-static void sendCmd(bt_cmd_t *cmd)
-{
-    // save command in the context
-    memcpy(&ctx.cmd, cmd, sizeof(bt_cmd_t));
-
-    // send command to BT740 module
-    send_cmd_string(commands[cmd->type].cmdString);
-}
-
-void BT740_sendCmd(bt_cmd_t *cmd, response_cb *cb)
+void BT740_sendCmd(bt_cmd_t *cmd, response_cb cb)
 {
     // save command in the context
     memcpy(&ctx.cmd, cmd, sizeof(bt_cmd_t));
@@ -149,9 +142,12 @@ void BT740_send_packet(uint8_t *data, uint8_t data_len)
 static void queue_put_response() {
     uint8_t *item;
 
-    item = malloc(CMD_RESPONSE_LENGTH_MAX);
-    memcpy(item, cmdResponse.buffer, CMD_RESPONSE_LENGTH_MAX);
+    item = malloc(RESPONSE_DATA_LENGTH);
+    if(!item) {
+        return;
+    }
 
+    memcpy(item, cmdResponse.buffer, RESPONSE_DATA_LENGTH);
     OS_QUEUE_PUT_FROM_ISR(ctx.queue, &item);
 }
 
@@ -165,7 +161,7 @@ void USART2_IRQHandler(void)
         received_data = (uint8_t)USART_ReceiveData(USART2);
         cmdResponse.buffer[cmdResponse.length] = received_data;
         cmdResponse.length++;
-        if(cmdResponse.length == CMD_RESPONSE_LENGTH_MAX) {
+        if(cmdResponse.length == RESPONSE_DATA_LENGTH) {
             cmdResponse.length = 0;
         }
         if(received_data == '\r') {
@@ -176,7 +172,7 @@ void USART2_IRQHandler(void)
                 queue_put_response();
                 bt_response_ready();
                 cmdResponse.length = 0;
-                memset(cmdResponse.buffer, 0, CMD_RESPONSE_LENGTH_MAX);
+                memset(cmdResponse.buffer, 0, RESPONSE_DATA_LENGTH);
             }
         } else if((received_data == '\n') && (cmdResponse.length == 1)) {
             cmdResponse.length = 0;
@@ -199,7 +195,7 @@ static void bt740_ready(TimerHandle_t xTimer)
 
 static bool is_echoed_cmd(uint8_t *response)
 {
-    return (strncmp(commands[ctx.cmd.type].cmdString, response, strlen(commands[ctx.cmd.type].cmdString)) == 0);
+    return (strncmp(commands[ctx.cmd.type].cmdString, (char*)response, strlen(commands[ctx.cmd.type].cmdString)) == 0);
 }
 
 static void handleCmd(void)
@@ -213,10 +209,52 @@ void BT740_register_for_state(state_cb cb)
     ctx.module_state_cb = cb;
 }
 
+static void handleResponse(uint8_t *response)
+{
+    if(is_echoed_cmd(response)) {
+        free(response);
+        return;
+    }
+
+    DEBUG_PRINTF("Received:%s\r\n",response);
+
+    if(strncmp("OK", (char*)response, strlen("OK")) == 0) {
+        if(ctx.cmd_response_cb) {
+            ctx.cmd_response_cb(true, ctx.response_queue);
+            ctx.response_queue = NULL;
+        }
+    } else if(strncmp("ERROR", (char*)response, strlen("ERROR")) == 0) {
+        if(ctx.cmd_response_cb) {
+            ctx.cmd_response_cb(false, ctx.response_queue);
+            ctx.response_queue = NULL;
+        }
+    } else {
+        response_queue_t *item;
+
+        item = (response_queue_t*)malloc(sizeof(response_queue_t));
+        if(!item) {
+            return;
+        }
+
+        memcpy(item->data, response, RESPONSE_DATA_LENGTH);
+        item->next = NULL;
+
+        if(!ctx.response_queue) {
+            ctx.response_queue = item;
+            ctx.response_queue_tail = item;
+        }
+
+        ctx.response_queue_tail->next = item;
+        ctx.response_queue_tail = item;
+    }
+
+    /* response handling here */
+    free(response);
+}
+
 void bt740_task(void *params)
 {
     uint8_t *response;
-    bt_cmd_t cmd;
 
     DEBUG_PRINTF("BT740 task started!\r\n");
 
@@ -243,21 +281,12 @@ void bt740_task(void *params)
                     continue;
                 }
 
-                if(is_echoed_cmd(response)) {
-                    free(response);
-                    continue;
-                }
-                DEBUG_PRINTF("Received:%s\r\n",response);
-
-                /* response handling here */
-                free(response);
+                handleResponse(response);
             }
             if (notification & BT740_SETUP_DONE_NOTIF) {
                 if(ctx.module_state_cb) {
                     ctx.module_state_cb(BT_MODULE_READY);
                 }
-                cmd.type = BT_CMD_ECHO_OFF;
-                sendCmd(&cmd);
             }
 
             if (notification & BT740_SEND_COMMAND_NOTIF) {
