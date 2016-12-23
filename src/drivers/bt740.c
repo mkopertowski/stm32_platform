@@ -6,6 +6,7 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
@@ -42,7 +43,9 @@ struct context {
     QueueHandle_t queue;
     TimerHandle_t bt740_setup_timer;
     bt_cmd_t cmd;
+    response_cb *cmd_response_cb;
     message_cb msg_cb;
+    state_cb module_state_cb;
 };
 
 static const cmd_info_t commands[] = {
@@ -53,7 +56,7 @@ static const cmd_info_t commands[] = {
 };
 
 static response_t cmdResponse;
-static struct context ctx;
+static struct context ctx = {0};
 
 static void bt740_task(void *params);
 static void bt_response_ready(void);
@@ -115,7 +118,7 @@ void send_cmd_string(const char *s)
     DEBUG_PRINTF("\n");
 }
 
-static sendCmd(bt_cmd_t *cmd)
+static void sendCmd(bt_cmd_t *cmd)
 {
     // save command in the context
     memcpy(&ctx.cmd, cmd, sizeof(bt_cmd_t));
@@ -124,13 +127,13 @@ static sendCmd(bt_cmd_t *cmd)
     send_cmd_string(commands[cmd->type].cmdString);
 }
 
-void BT740_sendCmd(bt_cmd_t *cmd, bt_cmd_response_t *response)
+void BT740_sendCmd(bt_cmd_t *cmd, response_cb *cb)
 {
     // save command in the context
     memcpy(&ctx.cmd, cmd, sizeof(bt_cmd_t));
+    ctx.cmd_response_cb = cb;
 
-    // send command to BT740 module
-    send_cmd_string(commands[cmd->type].cmdString);
+    OS_TASK_NOTIFY(ctx.task, BT740_SEND_COMMAND_NOTIF);
 }
 
 void BT740_register_for_messages(message_cb cb)
@@ -199,6 +202,17 @@ static bool is_echoed_cmd(uint8_t *response)
     return (strncmp(commands[ctx.cmd.type].cmdString, response, strlen(commands[ctx.cmd.type].cmdString)) == 0);
 }
 
+static void handleCmd(void)
+{
+    // send command to BT740 module
+    send_cmd_string(commands[ctx.cmd.type].cmdString);
+}
+
+void BT740_register_for_state(state_cb cb)
+{
+    ctx.module_state_cb = cb;
+}
+
 void bt740_task(void *params)
 {
     uint8_t *response;
@@ -236,12 +250,18 @@ void bt740_task(void *params)
                 DEBUG_PRINTF("Received:%s\r\n",response);
 
                 /* response handling here */
-
                 free(response);
             }
             if (notification & BT740_SETUP_DONE_NOTIF) {
+                if(ctx.module_state_cb) {
+                    ctx.module_state_cb(BT_MODULE_READY);
+                }
                 cmd.type = BT_CMD_ECHO_OFF;
                 sendCmd(&cmd);
+            }
+
+            if (notification & BT740_SEND_COMMAND_NOTIF) {
+                handleCmd();
             }
         }
 

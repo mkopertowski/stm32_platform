@@ -1,6 +1,7 @@
 /*
  * ToDO:
  * - thread safe BT740_sendCmd() z callbackiem
+ * - device type to storage (router, end device)
  *
  * Done:
  * - modul storage
@@ -44,7 +45,7 @@ int main(int argc, char* argv[])
     /* init BT740 bluetooth module */
     BT740_init();
 
-    //xTaskCreate(app_task, "app_task", 512, NULL, OS_TASK_PRIORITY, NULL);
+    xTaskCreate(app_task, "app_task", 512, NULL, OS_TASK_PRIORITY, NULL);
 
     /* Start the scheduler. */
     vTaskStartScheduler();

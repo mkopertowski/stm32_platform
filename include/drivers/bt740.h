@@ -1,6 +1,15 @@
 #ifndef BT740_H_
 #define BT740_H_
 
+#include <global.h>
+
+#define RESPONSE_DATA_LENGTH (20)
+
+typedef enum {
+    BT_MODULE_OFFLINE,
+    BT_MODULE_READY,
+} bt_state_t;
+
 typedef enum {
     BT_CMD_UNKNOWN,
     BT_CMD_STATUS_CHECK,
@@ -20,15 +29,20 @@ typedef struct {
     bt_cmd_params_t params;
 } bt_cmd_t;
 
-typedef union {
-    uint8_t error_code;
-} bt_cmd_response_t;
+typedef struct response {
+    uint8_t data[RESPONSE_DATA_LENGTH];
+    struct response *next;
+} response_queue_t;
 
 typedef void (*message_cb)(uint8_t *data, uint8_t data_len);
+typedef void (*response_cb)(bool status, response_queue_t *resp);
+typedef void (*state_cb)(bt_state_t state);
 
 void BT740_init(void);
-void BT740_sendCmd(bt_cmd_t *cmd, bt_cmd_response_t *response);
+void BT740_sendCmd(bt_cmd_t *cmd, response_cb *cb);
 void BT740_register_for_packets(message_cb cb);
 void BT740_send_packet(uint8_t *data, uint8_t data_len);
+
+void BT740_register_for_state(state_cb cb);
 
 #endif // BT740_H

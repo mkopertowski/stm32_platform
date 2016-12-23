@@ -8,6 +8,7 @@
 #include <timers.h>
 #include <projdefs.h>
 #include <os.h>
+#include <bt740.h>
 
 #define DEBUG_ON
 #include <debug.h>
@@ -18,9 +19,9 @@ struct context {
 
 struct context ctx = { 0 };
 
-void app_some_action(void)
+void bt_module_state_cb(bt_state_t state)
 {
-    OS_TASK_NOTIFY(ctx.app_task, APP_SOME_NOTIFICATION_NOTIF);
+    OS_TASK_NOTIFY(ctx.app_task, APP_BT_MODULE_READY_NOTIF);
 }
 
 void app_task(void *params)
@@ -31,6 +32,8 @@ void app_task(void *params)
 
     ctx.app_task = xTaskGetCurrentTaskHandle();
 
+    BT740_register_for_state(bt_module_state_cb);
+
     for (;;) {
         BaseType_t ret;
         uint32_t notification;
@@ -38,13 +41,12 @@ void app_task(void *params)
         /* Wait on any of the event group bits, then clear them all */
         ret = xTaskNotifyWait(0, OS_TASK_NOTIFY_MASK, &notification, pdMS_TO_TICKS(50));
 
-        if (ret == pdPASS) {
-            if (notification & APP_SOME_NOTIFICATION_NOTIF) {
-                DEBUG_PRINTF("Task notified by some action!\r\n");
-            }
-        } else if (!send_notif) {
-            app_some_action();
-            send_notif = 1;
+        if (ret != pdPASS) {
+            continue;
+        }
+
+        if (notification & APP_BT_MODULE_READY_NOTIF) {
+            DEBUG_PRINTF("APP: Bluetooth module is ready\r\n");
         }
     }
 }
