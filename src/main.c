@@ -1,10 +1,16 @@
 /*
  * ToDO:
- * - device type to storage (router, end device)
+ * - button handling
+ * - led for discaverable mode
+ * - pairing
+ * - SPP and protocol
+ * - self and router address storing
+ *
  *
  * Done:
- * - modul storage
- * - thread safe BT740_sendCmd() z callbackiem
+ * - module storage
+ * - thread safe BT740_sendCmd() + callback
+ * - device type to storage (router, end device)
  */
 #include <stdio.h>
 #include <stdlib.h>

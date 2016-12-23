@@ -9,6 +9,7 @@
 #include <projdefs.h>
 #include <os.h>
 #include <bt740.h>
+#include <storage.h>
 
 #define DEBUG_ON
 #include <debug.h>
@@ -17,6 +18,7 @@ struct context {
     TaskHandle_t app_task;
     response_queue_t *response;
     bool response_status;
+    device_type_t device_type;
 };
 
 struct context ctx = { 0 };
@@ -55,7 +57,12 @@ void app_task(void *params)
 
     ctx.app_task = xTaskGetCurrentTaskHandle();
 
+    /* register for BT module state */
     BT740_register_for_state(bt_module_state_cb);
+
+    /* get device type from storage */
+    storage_get_device_type(&ctx.device_type);
+    DEBUG_PRINTF("Device type is %s\r\n",(ctx.device_type ? "AVALANCHE_BEACON" : "ROUTER"));
 
     for (;;) {
         BaseType_t ret;

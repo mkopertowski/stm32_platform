@@ -3,7 +3,7 @@
 
 /* Virtual address defined by the user: 0xFFFF value is prohibited */
 uint16_t VirtAddVarTab[] = {
-        0x0000,              /* some data */
+        0x0000,              /* device type */
 };
 
 void storage_init(void)
@@ -15,3 +15,12 @@ void storage_init(void)
     EE_Init();
 }
 
+void storage_set_device_type(device_type_t type)
+{
+    EE_WriteVariable(VirtAddVarTab[0], type);
+}
+
+void storage_get_device_type(device_type_t *type)
+{
+    EE_ReadVariable(VirtAddVarTab[0],type);
+}
