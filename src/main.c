@@ -3,6 +3,9 @@
  * - pairing
  * - SPP and protocol
  * - self and router address storing
+ * - long press reset
+ * - sending comands to router (I'm online, Module was hitted)
+ * - router commands (initiate connection, enable avalanche beacon)
  *
  * Done:
  * - module storage

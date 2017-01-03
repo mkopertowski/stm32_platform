@@ -126,7 +126,12 @@ void app_task(void *params)
 
         if(notification & APP_LONG_PRESS_NOTIF) {
             DEBUG_PRINTF("APP: Long button press\r\n");
+            /* ToDo: reset device (enable disoverable mode, unpair, reboot */
         }
 
+        if(notification & APP_MODULE_HITTED_NOTIF) {
+            DEBUG_PRINTF("APP: Module hitted\r\n");
+            /* ToDo: send notification to router */
+        }
     }
 }
