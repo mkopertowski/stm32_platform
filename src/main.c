@@ -1,6 +1,5 @@
 /*
  * ToDO:
- * - button handling
  * - pairing
  * - SPP and protocol
  * - self and router address storing
@@ -11,6 +10,7 @@
  * - thread safe BT740_sendCmd() + callback
  * - device type to storage (router, end device)
  * - led API
+ * - button handling
  *
  */
 #include <stdio.h>

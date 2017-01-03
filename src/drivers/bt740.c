@@ -23,7 +23,7 @@
 #define DEBUG_ON
 #include <debug.h>
 
-#define CMD_LENGTH_MAX (20)
+#define CMD_LENGTH_MAX (30)
 
 #define QUEUE_MAX_ITEMS (5)
 #define QUEUE_ITEM_SIZE (RESPONSE_DATA_LENGTH)
@@ -55,6 +55,7 @@ static const cmd_info_t commands[] = {
         {"ATE0"},               // BT_CMD_ECHO_OFF
         {"AT+BTT?"},            // BT_CMD_GET_DEVICES
         {"AT&W"},               // BT_CMD_WIRTE_S_REGISTER: write S register to non-volatile memory
+        {"AT+BTF4040A7BE6AC8"},            // BT_CMD_INQUIRE
 };
 
 static response_t cmdResponse;
@@ -242,10 +243,10 @@ static void handleResponse(uint8_t *response)
         if(!ctx.response_queue) {
             ctx.response_queue = item;
             ctx.response_queue_tail = item;
+        } else {
+            ctx.response_queue_tail->next = item;
+            ctx.response_queue_tail = item;
         }
-
-        ctx.response_queue_tail->next = item;
-        ctx.response_queue_tail = item;
     }
 
     /* response handling here */

@@ -3,7 +3,7 @@
 
 #include <global.h>
 
-#define RESPONSE_DATA_LENGTH (20)
+#define RESPONSE_DATA_LENGTH (30)
 
 typedef enum {
     BT_MODULE_OFFLINE,
@@ -16,6 +16,7 @@ typedef enum {
     BT_CMD_ECHO_OFF,
     BT_CMD_GET_DEVICES,
     BT_CMD_WIRTE_S_REGISTER,
+    BT_CMD_GET_FRIENDLY_NAME,
     BT_CMD_WRITE_SREG_DISCOVERABLE,
     BT_CMD_WRITE_SREG_CONNECTABLE,
     BT_CMD_LAST,

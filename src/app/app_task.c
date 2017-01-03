@@ -47,6 +47,7 @@ static void handle_bt_module_response(void)
     DEBUG_PRINTF("APP: Bluetooth module response arrived(%s)\r\n",(ctx.response_status ? "OK" : "ERROR"));
 
     while(ctx.response) {
+        ctx.response->data[RESPONSE_DATA_LENGTH-1] = 0;
         DEBUG_PRINTF("APP: Response: %s\r\n", ctx.response->data);
         tmp_response = ctx.response;
         ctx.response = ctx.response->next;
@@ -100,7 +101,7 @@ void app_task(void *params)
 
         if(notification & APP_BT_MODULE_READY_NOTIF) {
             DEBUG_PRINTF("APP: Bluetooth module is ready\r\n");
-            cmd.type = BT_CMD_GET_DEVICES;
+            cmd.type = BT_CMD_GET_FRIENDLY_NAME;
             BT740_sendCmd(&cmd, bt_module_respone);
         }
 
