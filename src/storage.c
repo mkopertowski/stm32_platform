@@ -1,5 +1,6 @@
 #include <stm32f10x_flash.h>
 #include <storage.h>
+#include <eeprom.h>
 
 /* Virtual address defined by the user: 0xFFFF value is prohibited */
 uint16_t VirtAddVarTab[] = {
@@ -22,5 +23,5 @@ void storage_set_device_type(device_type_t type)
 
 void storage_get_device_type(device_type_t *type)
 {
-    EE_ReadVariable(VirtAddVarTab[0],type);
+    EE_ReadVariable(VirtAddVarTab[0],(uint16_t*)type);
 }

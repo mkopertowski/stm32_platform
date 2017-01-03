@@ -1,7 +1,6 @@
 /*
  * ToDO:
  * - button handling
- * - led for discaverable mode
  * - pairing
  * - SPP and protocol
  * - self and router address storing
@@ -11,6 +10,8 @@
  * - module storage
  * - thread safe BT740_sendCmd() + callback
  * - device type to storage (router, end device)
+ * - led API
+ *
  */
 #include <stdio.h>
 #include <stdlib.h>

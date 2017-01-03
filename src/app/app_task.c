@@ -10,6 +10,7 @@
 #include <os.h>
 #include <bt740.h>
 #include <storage.h>
+#include <io.h>
 
 #define DEBUG_ON
 #include <debug.h>
@@ -53,6 +54,21 @@ static void handle_bt_module_response(void)
     }
 }
 
+static void button_state_listener(io_button_state_t state)
+{
+    switch(state) {
+        case IO_BUTTON_SHORT_PRESS:
+            OS_TASK_NOTIFY(ctx.app_task, APP_SHORT_PRESS_NOTIF);
+            break;
+        case IO_BUTTON_LONG_PRESS:
+            OS_TASK_NOTIFY(ctx.app_task, APP_LONG_PRESS_NOTIF);
+            break;
+        default:
+            DEBUG_PRINTF("APP: Unknown button state\r\n");
+            break;
+    }
+}
+
 void app_task(void *params)
 {
     bt_cmd_t cmd;
@@ -67,6 +83,9 @@ void app_task(void *params)
     /* get device type from storage */
     storage_get_device_type(&ctx.device_type);
     DEBUG_PRINTF("Device type is %s\r\n",(ctx.device_type ? "AVALANCHE_BEACON" : "ROUTER"));
+
+    /*  */
+    io_button_register_listener(button_state_listener);
 
     for (;;) {
         BaseType_t ret;
@@ -88,5 +107,14 @@ void app_task(void *params)
         if(notification & APP_BT_MODULE_RESPONSE_NOTIF) {
             handle_bt_module_response();
         }
+
+        if(notification & APP_SHORT_PRESS_NOTIF) {
+            DEBUG_PRINTF("APP: Short button press\r\n");
+        }
+
+        if(notification & APP_LONG_PRESS_NOTIF) {
+            DEBUG_PRINTF("APP: Long button press\r\n");
+        }
+
     }
 }
