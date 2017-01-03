@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <FreeRTOS.h>
 #include <event_groups.h>
@@ -83,9 +84,10 @@ void app_task(void *params)
 
     /* get device type from storage */
     storage_get_device_type(&ctx.device_type);
-    DEBUG_PRINTF("Device type is %s\r\n",(ctx.device_type ? "AVALANCHE_BEACON" : "ROUTER"));
+    DEBUG_PRINTF("Device type is %s, state:%s\r\n",(ctx.device_type ? "AVALANCHE_BEACON" : "AVALANCHE_ROUTER"),
+                                                               (storage_is_paired() ? "PAIRED" : "NOT PAIRED"));
 
-    /*  */
+    /* register button state listener */
     io_button_register_listener(button_state_listener);
 
     for (;;) {
