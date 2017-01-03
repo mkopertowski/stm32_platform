@@ -13,4 +13,7 @@ typedef enum {
     true
 } bool;
 
+#define ON true
+#define OFF false
+
 #endif /* GLOBAL_H */

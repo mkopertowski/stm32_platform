@@ -46,6 +46,9 @@ int main(int argc, char* argv[])
 
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 
+    /* IO */
+    io_init();
+
     /* init flash data storage */
     storage_init();
 
