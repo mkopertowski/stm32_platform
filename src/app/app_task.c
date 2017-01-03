@@ -71,6 +71,11 @@ static void button_state_listener(io_button_state_t state)
     }
 }
 
+static void module_hitted(void)
+{
+    OS_TASK_NOTIFY(ctx.app_task, APP_MODULE_HITTED_NOTIF);
+}
+
 void app_task(void *params)
 {
     bt_cmd_t cmd;
@@ -89,6 +94,9 @@ void app_task(void *params)
 
     /* register button state listener */
     io_button_register_listener(button_state_listener);
+
+    /* register module hit listener */
+    io_module_hit_register_listener(module_hitted);
 
     for (;;) {
         BaseType_t ret;

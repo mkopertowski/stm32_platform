@@ -20,6 +20,7 @@
 
 typedef struct {
     io_button_pressed_cb_t button_state_listener;
+    io_module_hit_cb_t module_hit_listener;
     TimerHandle_t button_timer;
 } ctx_t;
 
@@ -101,6 +102,16 @@ void EXTI4_IRQHandler(void)
     }
 }
 
+static void io_init_avalanche_beacon(void)
+{
+
+}
+
+static void io_init_module_hit_sensor(void)
+{
+
+}
+
 void io_init(void)
 {
     /* init LED */
@@ -108,8 +119,13 @@ void io_init(void)
 
     /* init button */
     io_init_button();
-}
 
+    /* avalnache beacon */
+    io_init_avalanche_beacon();
+
+    /* module hit detection */
+    io_init_module_hit_sensor();
+}
 
 void io_set_led_state(bool state)
 {
@@ -124,3 +140,14 @@ void io_button_register_listener(io_button_pressed_cb_t cb)
 {
     ctx.button_state_listener = cb;
 }
+
+void io_set_avalnache_beacon_state(bool state)
+{
+
+}
+
+void io_module_hit_register_listener(io_module_hit_cb_t cb)
+{
+    ctx.module_hit_listener = cb;
+}
+
