@@ -4,6 +4,7 @@
 #include <global.h>
 
 #define RESPONSE_DATA_LENGTH (30)
+#define BT_ADDRESS_LENGTH (12)
 
 typedef enum {
     BT_MODULE_OFFLINE,
@@ -24,6 +25,7 @@ typedef enum {
 
 typedef union {
     uint8_t param;
+    uint8_t bt_address[BT_ADDRESS_LENGTH];
 } bt_cmd_params_t;
 
 typedef struct {

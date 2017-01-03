@@ -102,6 +102,7 @@ void app_task(void *params)
         if(notification & APP_BT_MODULE_READY_NOTIF) {
             DEBUG_PRINTF("APP: Bluetooth module is ready\r\n");
             cmd.type = BT_CMD_GET_FRIENDLY_NAME;
+            memcpy(cmd.params.bt_address,"4040A7BE6AC8",BT_ADDRESS_LENGTH);
             BT740_sendCmd(&cmd, bt_module_respone);
         }
 

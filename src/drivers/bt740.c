@@ -55,7 +55,7 @@ static const cmd_info_t commands[] = {
         {"ATE0"},               // BT_CMD_ECHO_OFF
         {"AT+BTT?"},            // BT_CMD_GET_DEVICES
         {"AT&W"},               // BT_CMD_WIRTE_S_REGISTER: write S register to non-volatile memory
-        {"AT+BTF4040A7BE6AC8"},            // BT_CMD_INQUIRE
+        {"AT+BTF"},             // BT_CMD_GET_FRIENDLY_NAME
 };
 
 static response_t cmdResponse;
@@ -201,8 +201,22 @@ static bool is_echoed_cmd(uint8_t *response)
 
 static void handleCmd(void)
 {
+    uint8_t cmd[CMD_LENGTH_MAX];
+    uint8_t last_character_index;
+
+    memset(cmd,0,CMD_LENGTH_MAX);
     // send command to BT740 module
-    send_cmd_string(commands[ctx.cmd.type].cmdString);
+    switch(ctx.cmd.type) {
+        case BT_CMD_GET_FRIENDLY_NAME:
+            sprintf(cmd,"%s",commands[ctx.cmd.type].cmdString);
+            last_character_index = strlen(commands[ctx.cmd.type].cmdString);
+            memcpy(&(cmd[last_character_index]),ctx.cmd.params.bt_address,BT_ADDRESS_LENGTH);
+            send_cmd_string(cmd);
+            break;
+        default:
+            send_cmd_string(commands[ctx.cmd.type].cmdString);
+            break;
+    }
 }
 
 void BT740_register_for_state(state_cb cb)
