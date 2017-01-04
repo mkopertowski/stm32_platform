@@ -16,4 +16,6 @@ typedef enum {
 #define ON true
 #define OFF false
 
+#define BT_ADDRESS_LENGTH (12)
+
 #endif /* GLOBAL_H */

@@ -4,7 +4,6 @@
 #include <global.h>
 
 #define RESPONSE_DATA_LENGTH (30)
-#define BT_ADDRESS_LENGTH (12)
 
 typedef enum {
     BT_MODULE_OFFLINE,
