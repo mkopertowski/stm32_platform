@@ -18,8 +18,8 @@
 
 struct context {
     TaskHandle_t app_task;
-    response_queue_t *response;
-    bool response_status;
+    response_queue_t *cmd_response;
+    bt_cmd_status_t cmd_status;
     device_type_t device_type;
 };
 
@@ -34,10 +34,10 @@ void bt_module_state_cb(bt_state_t state)
     OS_TASK_NOTIFY(ctx.app_task, APP_BT_MODULE_READY_NOTIF);
 }
 
-void bt_module_respone(bool status, response_queue_t *resp)
+static void bt_module_respone(bt_cmd_status_t status, response_queue_t *resp)
 {
-    ctx.response = resp;
-    ctx.response_status = status;
+    ctx.cmd_response = resp;
+    ctx.cmd_status = status;
     OS_TASK_NOTIFY(ctx.app_task, APP_BT_MODULE_RESPONSE_NOTIF);
 }
 
@@ -45,13 +45,13 @@ static void handle_bt_module_response(void)
 {
     response_queue_t *tmp_response;
 
-    DEBUG_PRINTF("APP: Bluetooth module response arrived(%s)\r\n",(ctx.response_status ? "OK" : "ERROR"));
+    DEBUG_PRINTF("APP: Bluetooth module response arrived(%x)\r\n",ctx.cmd_status);
 
-    while(ctx.response) {
-        ctx.response->data[RESPONSE_DATA_LENGTH-1] = 0;
-        DEBUG_PRINTF("APP: Response: %s\r\n", ctx.response->data);
-        tmp_response = ctx.response;
-        ctx.response = ctx.response->next;
+    while(ctx.cmd_response) {
+        ctx.cmd_response->data[RESPONSE_DATA_LENGTH-1] = 0;
+        DEBUG_PRINTF("APP: Response: %s\r\n", ctx.cmd_response->data);
+        tmp_response = ctx.cmd_response;
+        ctx.cmd_response = ctx.cmd_response->next;
         free(tmp_response);
     }
 }
@@ -112,7 +112,7 @@ void app_task(void *params)
         if(notification & APP_BT_MODULE_READY_NOTIF) {
             DEBUG_PRINTF("APP: Bluetooth module is ready\r\n");
             cmd.type = BT_CMD_GET_FRIENDLY_NAME;
-            memcpy(cmd.params.bt_address,"4040A7BE6AC8",BT_ADDRESS_LENGTH);
+            sprintf(cmd.params.bt_address,"%s","4040A7BE6AC8");
             BT740_sendCmd(&cmd, bt_module_respone);
         }
 

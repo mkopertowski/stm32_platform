@@ -3,6 +3,9 @@
  * BROWN  TX    A3(RX)
  * YELLOW RX    A2(TX)
  * BLUE   VCC
+ *
+ * FT232 blue gnd
+ *       green rxd
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,11 +45,13 @@ struct context {
     QueueHandle_t queue;
     TimerHandle_t bt740_setup_timer;
     bt_cmd_t cmd;
-    response_cb cmd_response_cb;
+    cmd_response_cb cmd_response_cb;
     response_queue_t *response_queue;
     response_queue_t *response_queue_tail;
-    message_cb msg_cb;
+    msg_receive_cb receive_cb;
     state_cb module_state_cb;
+    bool spp_connection_active;
+    bt_packet_t packet;
 };
 
 static const cmd_info_t commands[] = {
@@ -55,7 +60,8 @@ static const cmd_info_t commands[] = {
         {"ATE0"},               // BT_CMD_ECHO_OFF
         {"AT+BTT?"},            // BT_CMD_GET_DEVICES
         {"AT&W"},               // BT_CMD_WIRTE_S_REGISTER: write S register to non-volatile memory
-        {"AT+BTF"},             // BT_CMD_GET_FRIENDLY_NAME
+        {"AT+BTF%s"},           // BT_CMD_GET_FRIENDLY_NAME
+        {"ATD%s,1101"},         // BT_CMD_SPP_START
 };
 
 static response_t cmdResponse;
@@ -121,7 +127,7 @@ void send_cmd_string(const char *s)
     DEBUG_PRINTF("\n");
 }
 
-void BT740_sendCmd(bt_cmd_t *cmd, response_cb cb)
+void BT740_sendCmd(bt_cmd_t *cmd, cmd_response_cb cb)
 {
     // save command in the context
     memcpy(&ctx.cmd, cmd, sizeof(bt_cmd_t));
@@ -130,14 +136,38 @@ void BT740_sendCmd(bt_cmd_t *cmd, response_cb cb)
     OS_TASK_NOTIFY(ctx.task, BT740_SEND_COMMAND_NOTIF);
 }
 
-void BT740_register_for_messages(message_cb cb)
+void BT740_register_for_messages(msg_receive_cb cb)
 {
-    ctx.msg_cb = cb;
+    ctx.receive_cb = cb;
 }
 
-void BT740_send_packet(uint8_t *data, uint8_t data_len)
+static void bt_module_respone(bool status, response_queue_t *resp)
 {
+    if(status) {
+        OS_TASK_NOTIFY(ctx.task, BT740_SPP_CONNECT_NOTIF);
+    } else {
+        OS_TASK_NOTIFY(ctx.task, BT740_SPP_NO_CARRIER_NOTIF);
+    }
+}
 
+void BT740_send_message(bt_packet_t *packet)
+{
+    bt_cmd_t cmd;
+
+    if(ctx.spp_connection_active) {
+        return;
+    } else {
+        ctx.spp_connection_active = true;
+    }
+
+    memcpy(&ctx.packet,packet,sizeof(bt_packet_t));
+
+    cmd.type = BT_CMD_SPP_START;
+    sprintf(cmd.params.bt_address,"%s",packet->bt_address);
+
+    BT740_sendCmd(&cmd,bt_module_respone);
+
+    return;
 }
 
 static void queue_put_response() {
@@ -202,15 +232,12 @@ static bool is_echoed_cmd(uint8_t *response)
 static void handleCmd(void)
 {
     uint8_t cmd[CMD_LENGTH_MAX];
-    uint8_t last_character_index;
 
     memset(cmd,0,CMD_LENGTH_MAX);
     // send command to BT740 module
     switch(ctx.cmd.type) {
         case BT_CMD_GET_FRIENDLY_NAME:
-            sprintf(cmd,"%s",commands[ctx.cmd.type].cmdString);
-            last_character_index = strlen(commands[ctx.cmd.type].cmdString);
-            memcpy(&(cmd[last_character_index]),ctx.cmd.params.bt_address,BT_ADDRESS_LENGTH);
+            sprintf(cmd,commands[ctx.cmd.type].cmdString,ctx.cmd.params.bt_address);
             send_cmd_string(cmd);
             break;
         default:
@@ -241,6 +268,16 @@ static void handleResponse(uint8_t *response)
     } else if(strncmp("ERROR", (char*)response, strlen("ERROR")) == 0) {
         if(ctx.cmd_response_cb) {
             ctx.cmd_response_cb(false, ctx.response_queue);
+            ctx.response_queue = NULL;
+        }
+    } else if(strncmp("CONNECT", (char*)response, strlen("CONNECT")) == 0) {
+        if(ctx.cmd_response_cb) {
+            ctx.cmd_response_cb(true, NULL);
+            ctx.response_queue = NULL;
+        }
+    } else if(strncmp("NO CARRIER", (char*)response, strlen("NO CARRIER")) == 0) {
+        if(ctx.cmd_response_cb) {
+            ctx.cmd_response_cb(false, NULL);
             ctx.response_queue = NULL;
         }
     } else {
@@ -306,6 +343,19 @@ void bt740_task(void *params)
 
             if (notification & BT740_SEND_COMMAND_NOTIF) {
                 handleCmd();
+            }
+
+            if (notification & BT740_SPP_CONNECT_NOTIF) {
+                /* send packet */
+
+                /* start response timer */
+            }
+
+            if (notification & BT740_SPP_NO_CARRIER_NOTIF) {
+                if(ctx.receive_cb) {
+                    ctx.receive_cb(false,NULL);
+                }
+                ctx.spp_connection_active = false;
             }
         }
 

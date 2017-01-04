@@ -9,6 +9,7 @@
 typedef enum {
     BT_MODULE_OFFLINE,
     BT_MODULE_READY,
+    BT_MODULE_SPP_CONNECTION,
 } bt_state_t;
 
 typedef enum {
@@ -18,6 +19,7 @@ typedef enum {
     BT_CMD_GET_DEVICES,
     BT_CMD_WIRTE_S_REGISTER,
     BT_CMD_GET_FRIENDLY_NAME,
+    BT_CMD_SPP_START,
     BT_CMD_WRITE_SREG_DISCOVERABLE,
     BT_CMD_WRITE_SREG_CONNECTABLE,
     BT_CMD_LAST,
@@ -25,7 +27,7 @@ typedef enum {
 
 typedef union {
     uint8_t param;
-    uint8_t bt_address[BT_ADDRESS_LENGTH];
+    uint8_t bt_address[BT_ADDRESS_LENGTH+1]; /* + \0 character */
 } bt_cmd_params_t;
 
 typedef struct {
@@ -33,19 +35,32 @@ typedef struct {
     bt_cmd_params_t params;
 } bt_cmd_t;
 
+typedef struct {
+    uint8_t bt_address[BT_ADDRESS_LENGTH];
+    uint8_t *data;
+    uint8_t data_len;
+} bt_packet_t;
+
+typedef enum {
+    BT_CMD_STATUS_OK,
+    BT_CMD_STATUS_CONNECTED,
+    BT_CMD_STATUS_ERROR = 0x10,
+    BT_CMD_STATUS_NO_CARRIER,
+} bt_cmd_status_t;
+
 typedef struct response_queue {
     uint8_t data[RESPONSE_DATA_LENGTH];
     struct response_queue *next;
 } response_queue_t;
 
-typedef void (*message_cb)(uint8_t *data, uint8_t data_len);
-typedef void (*response_cb)(bool status, response_queue_t *resp);
+typedef void (*msg_receive_cb)(bool status, bt_packet_t *packet);
+typedef void (*cmd_response_cb)(bt_cmd_status_t status, response_queue_t *resp);
 typedef void (*state_cb)(bt_state_t state);
 
 void BT740_init(void);
-void BT740_sendCmd(bt_cmd_t *cmd, response_cb cb);
-void BT740_register_for_packets(message_cb cb);
-void BT740_send_packet(uint8_t *data, uint8_t data_len);
+void BT740_sendCmd(bt_cmd_t *cmd, cmd_response_cb cb);
+void BT740_register_for_messages(msg_receive_cb cb);
+void BT740_send_message(bt_packet_t *packet);
 
 void BT740_register_for_state(state_cb cb);
 
