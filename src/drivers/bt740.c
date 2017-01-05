@@ -58,13 +58,13 @@ struct context {
 };
 
 static const cmd_info_t commands[] = {
-        {""},                   // BT_CMD_UNKNOWN
         {"AT"},                 // BT_CMD_STATUS_CHECK
         {"ATE0"},               // BT_CMD_ECHO_OFF
         {"AT+BTT?"},            // BT_CMD_GET_DEVICES
         {"AT&W"},               // BT_CMD_WIRTE_S_REGISTER: write S register to non-volatile memory
         {"AT+BTF%s"},           // BT_CMD_GET_FRIENDLY_NAME
         {"ATD%s,1101"},         // BT_CMD_SPP_START
+        {"ATH"}                 // BT_CMD_SPP_STOP
 };
 
 static response_t cmdResponse;
@@ -152,7 +152,7 @@ void BT740_register_for_messages(msg_receive_cb cb)
     ctx.receive_cb = cb;
 }
 
-static void bt_module_respone(bt_cmd_status_t status, response_queue_t *resp)
+static void bt_spp_start_respone(bt_cmd_status_t status, response_queue_t *resp)
 {
     switch(status) {
         case BT_CMD_STATUS_CONNECTED:
@@ -169,6 +169,24 @@ static void bt_module_respone(bt_cmd_status_t status, response_queue_t *resp)
     }
 }
 
+static void bt_spp_stop_respone(bt_cmd_status_t status, response_queue_t *resp)
+{
+    switch(status) {
+        case BT_CMD_STATUS_OK:
+            OS_TASK_NOTIFY(ctx.task, BT740_SPP_DISCONNECT_NOTIF);
+            break;
+        case BT_CMD_STATUS_ERROR:
+            //OS_TASK_NOTIFY(ctx.task, BT740_SPP_ERROR_NOTIF);
+            break;
+        case BT_CMD_STATUS_NO_CARRIER:
+            //OS_TASK_NOTIFY(ctx.task, BT740_SPP_NO_CARRIER_NOTIF);
+            break;
+        default:
+            break;
+    }
+}
+
+
 void BT740_send_message(bt_packet_t *packet)
 {
     bt_cmd_t cmd;
@@ -184,7 +202,7 @@ void BT740_send_message(bt_packet_t *packet)
     cmd.type = BT_CMD_SPP_START;
     sprintf(cmd.params.bt_address,"%s",packet->bt_address);
 
-    BT740_sendCmd(&cmd,bt_module_respone);
+    BT740_sendCmd(&cmd,bt_spp_start_respone);
 
     return;
 }
@@ -371,8 +389,18 @@ void bt740_task(void *params)
                 send_buffer(SPP_ESCPAE_SEQUENCE_STR,sizeof(SPP_ESCPAE_SEQUENCE_STR));
 
                 /* disconnect */
+                bt_cmd_t cmd;
+                cmd.type = BT_CMD_SPP_STOP;
+                BT740_sendCmd(&cmd,bt_spp_stop_respone);
 
                 /* ToDo: start response timer */
+            }
+
+            if (notification & BT740_SPP_CONNECT_NOTIF) {
+                if(ctx.receive_cb) {
+                    ctx.receive_cb(true,NULL);
+                }
+                ctx.spp_connection_active = false;
             }
 
             if (notification & BT740_SPP_NO_CARRIER_NOTIF) {

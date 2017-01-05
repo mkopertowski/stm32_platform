@@ -21,6 +21,7 @@ struct context {
     response_queue_t *cmd_response;
     bt_cmd_status_t cmd_status;
     device_type_t device_type;
+    bool send_message_status;
 };
 
 struct context ctx = { 0 };
@@ -78,6 +79,7 @@ static void module_hitted(void)
 
 void bt_message_received(bool status, bt_packet_t *packet)
 {
+    ctx.send_message_status = status;
     OS_TASK_NOTIFY(ctx.app_task, APP_BT_MSG_RECEIVED_NOTIF);
 }
 
@@ -158,7 +160,7 @@ void app_task(void *params)
         }
 
         if(notification & APP_BT_MSG_RECEIVED_NOTIF) {
-            DEBUG_PRINTF("APP: External message received\r\n");
+            DEBUG_PRINTF("APP: External message received(status=%d)\r\n",ctx.send_message_status);
             /* ToDo */
         }
     }
