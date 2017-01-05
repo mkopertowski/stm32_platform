@@ -31,8 +31,6 @@
 #define QUEUE_MAX_ITEMS (5)
 #define QUEUE_ITEM_SIZE (RESPONSE_DATA_LENGTH)
 
-#define SPP_ESCPAE_SEQUENCE_STR ("^^^")
-
 typedef struct {
     char cmdString[CMD_LENGTH_MAX];
 } cmd_info_t;
@@ -46,6 +44,7 @@ struct context {
     TaskHandle_t task;
     QueueHandle_t queue;
     TimerHandle_t bt740_setup_timer;
+    TimerHandle_t spp_escape_timer;
     bt_cmd_t cmd;
     uint8_t cmdString[CMD_LENGTH_MAX];
     cmd_response_cb cmd_response_cb;
@@ -111,7 +110,7 @@ static void usart_config(void)
 void BT740_init(void)
 {
     /* create task for communication with other devices */
-    xTaskCreate(bt740_task, "bt740_task", 2048, NULL, OS_TASK_PRIORITY, NULL);
+    xTaskCreate(bt740_task, "bt740_task", 3072, NULL, OS_TASK_PRIORITY, NULL);
 }
 
 void send_char(char c)
@@ -340,6 +339,65 @@ static void handleResponse(uint8_t *response)
     free(response);
 }
 
+static volatile uint8_t spp_escape_count;
+
+static send_spp_escape_sequence(void)
+{
+    spp_escape_count = 3;
+    xTimerStart(ctx.spp_escape_timer, 0 );
+}
+
+static void spp_escape(TimerHandle_t xTimer)
+{
+    if(spp_escape_count == 0) {
+        /* escape sequence finished -> disconnect */
+        bt_cmd_t cmd;
+        cmd.type = BT_CMD_SPP_STOP;
+        BT740_sendCmd(&cmd,bt_spp_stop_respone);
+        return;
+    }
+    //send_buffer("^",1);
+    spp_escape_count--;
+    xTimerStart(ctx.spp_escape_timer, 0 );
+}
+
+void handle_spp_connection(uint32_t notification)
+{
+    if (notification & BT740_SPP_CONNECT_NOTIF) {
+        /* send packet */
+        send_buffer(ctx.packet.data,ctx.packet.data_len);
+
+        /* send escape sequence */
+        send_spp_escape_sequence();
+
+
+
+        /* ToDo: start response timer */
+    }
+
+    if (notification & BT740_SPP_DISCONNECT_NOTIF) {
+        if(ctx.receive_cb) {
+            ctx.receive_cb(true,NULL);
+        }
+        ctx.spp_connection_active = false;
+    }
+
+    if (notification & BT740_SPP_NO_CARRIER_NOTIF) {
+        if(ctx.receive_cb) {
+            ctx.receive_cb(false,NULL);
+        }
+        ctx.spp_connection_active = false;
+    }
+
+    if (notification & BT740_SPP_ERROR_NOTIF) {
+        if(ctx.receive_cb) {
+            ctx.receive_cb(false,NULL);
+        }
+        ctx.spp_connection_active = false;
+    }
+
+}
+
 void bt740_task(void *params)
 {
     uint8_t *response;
@@ -350,6 +408,7 @@ void bt740_task(void *params)
     ctx.queue = xQueueCreate(QUEUE_MAX_ITEMS, QUEUE_ITEM_SIZE);
 
     ctx.bt740_setup_timer = xTimerCreate("bt740_tim",pdMS_TO_TICKS(1500),false,(void *)&ctx ,bt740_ready);
+    ctx.spp_escape_timer = xTimerCreate("spp_tim",pdMS_TO_TICKS(130),false,(void *)&ctx ,spp_escape);
 
     /* configure USART2 */
     usart_config();
@@ -381,41 +440,7 @@ void bt740_task(void *params)
                 handleCmd();
             }
 
-            if (notification & BT740_SPP_CONNECT_NOTIF) {
-                /* send packet */
-                send_buffer(ctx.packet.data,ctx.packet.data_len);
-
-                /* send escape sequence */
-                send_buffer(SPP_ESCPAE_SEQUENCE_STR,sizeof(SPP_ESCPAE_SEQUENCE_STR));
-
-                /* disconnect */
-                bt_cmd_t cmd;
-                cmd.type = BT_CMD_SPP_STOP;
-                BT740_sendCmd(&cmd,bt_spp_stop_respone);
-
-                /* ToDo: start response timer */
-            }
-
-            if (notification & BT740_SPP_CONNECT_NOTIF) {
-                if(ctx.receive_cb) {
-                    ctx.receive_cb(true,NULL);
-                }
-                ctx.spp_connection_active = false;
-            }
-
-            if (notification & BT740_SPP_NO_CARRIER_NOTIF) {
-                if(ctx.receive_cb) {
-                    ctx.receive_cb(false,NULL);
-                }
-                ctx.spp_connection_active = false;
-            }
-
-            if (notification & BT740_SPP_ERROR_NOTIF) {
-                if(ctx.receive_cb) {
-                    ctx.receive_cb(false,NULL);
-                }
-                ctx.spp_connection_active = false;
-            }
+            handle_spp_connection(notification);
         }
 
         if(uxQueueMessagesWaiting(ctx.queue)) {

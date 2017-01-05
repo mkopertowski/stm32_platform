@@ -1,11 +1,11 @@
 /*
  * ToDO:
  * - pairing
- * - SPP and protocol
+ * - SPP receiving messages
  * - self and router address storing
  * - long press reset
  * - sending comands to router (I'm online, Module was hitted)
- * - router commands (initiate connection, enable avalanche beacon)
+ * - router commands (hello, enable avalanche beacon)
  *
  * Done:
  * - module storage
@@ -14,6 +14,7 @@
  * - led API
  * - button handling
  * - get friendly name (command)
+ * - SPP sending messages protocol
  *
  */
 #include <stdio.h>
