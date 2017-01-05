@@ -141,12 +141,20 @@ void BT740_register_for_messages(msg_receive_cb cb)
     ctx.receive_cb = cb;
 }
 
-static void bt_module_respone(bool status, response_queue_t *resp)
+static void bt_module_respone(bt_cmd_status_t status, response_queue_t *resp)
 {
-    if(status) {
-        OS_TASK_NOTIFY(ctx.task, BT740_SPP_CONNECT_NOTIF);
-    } else {
-        OS_TASK_NOTIFY(ctx.task, BT740_SPP_NO_CARRIER_NOTIF);
+    switch(status) {
+        case BT_CMD_STATUS_CONNECTED:
+            OS_TASK_NOTIFY(ctx.task, BT740_SPP_CONNECT_NOTIF);
+            break;
+        case BT_CMD_STATUS_ERROR:
+            OS_TASK_NOTIFY(ctx.task, BT740_SPP_ERROR_NOTIF);
+            break;
+        case BT_CMD_STATUS_NO_CARRIER:
+            OS_TASK_NOTIFY(ctx.task, BT740_SPP_NO_CARRIER_NOTIF);
+            break;
+        default:
+            break;
     }
 }
 

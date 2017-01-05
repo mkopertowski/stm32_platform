@@ -84,7 +84,7 @@ void bt_message_received(bool status, bt_packet_t *packet)
 void app_task(void *params)
 {
     bt_cmd_t cmd;
-    uint8_t bt_router_address[BT_ADDRESS_LENGTH+1];
+    uint8_t bt_router_address[BT_ADDRESS_STR_LENGTH];
 
     DEBUG_PRINTF("Application task started!\r\n");
 
@@ -105,7 +105,7 @@ void app_task(void *params)
     io_module_hit_register_listener(module_hitted);
 
     /* get router bluetooth address */
-    memset(bt_router_address,0,BT_ADDRESS_LENGTH+1);
+    memset(bt_router_address,0,BT_ADDRESS_STR_LENGTH);
     storage_get_router_bt_address(bt_router_address);
 
     for (;;) {
@@ -122,11 +122,21 @@ void app_task(void *params)
         if(notification & APP_BT_MODULE_READY_NOTIF) {
             DEBUG_PRINTF("APP: Bluetooth module is ready\r\n");
 
-            BT740_register_for_messages();
+            /* get ready to receive messages */
+            BT740_register_for_messages(bt_message_received);
 
-            cmd.type = BT_CMD_GET_FRIENDLY_NAME;
+            bt_packet_t packet;
+
+            memcpy(packet.bt_address,bt_router_address,BT_ADDRESS_STR_LENGTH);
+            packet.data = (uint8_t*)malloc(4);
+            memcpy(packet.data,"DUPA",4);
+            packet.data_len = 4;
+
+            BT740_send_message(&packet);
+
+            /*cmd.type = BT_CMD_GET_FRIENDLY_NAME;
             sprintf(cmd.params.bt_address,"%s",bt_router_address);
-            BT740_sendCmd(&cmd, bt_module_respone);
+            BT740_sendCmd(&cmd, bt_module_respone);*/
         }
 
         if(notification & APP_BT_MODULE_RESPONSE_NOTIF) {

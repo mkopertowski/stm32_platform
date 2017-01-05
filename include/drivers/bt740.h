@@ -26,7 +26,7 @@ typedef enum {
 
 typedef union {
     uint8_t param;
-    uint8_t bt_address[BT_ADDRESS_LENGTH+1]; /* + \0 character */
+    uint8_t bt_address[BT_ADDRESS_STR_LENGTH];
 } bt_cmd_params_t;
 
 typedef struct {
@@ -35,7 +35,7 @@ typedef struct {
 } bt_cmd_t;
 
 typedef struct {
-    uint8_t bt_address[BT_ADDRESS_LENGTH];
+    uint8_t bt_address[BT_ADDRESS_STR_LENGTH];
     uint8_t *data;
     uint8_t data_len;
 } bt_packet_t;
