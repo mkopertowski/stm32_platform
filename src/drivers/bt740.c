@@ -108,7 +108,7 @@ static void usart_config(void)
 void BT740_init(void)
 {
     /* create task for communication with other devices */
-    xTaskCreate(bt740_task, "bt740_task", 1024, NULL, OS_TASK_PRIORITY, NULL);
+    xTaskCreate(bt740_task, "bt740_task", 2048, NULL, OS_TASK_PRIORITY, NULL);
 }
 
 void send_char(char c)
@@ -356,10 +356,21 @@ void bt740_task(void *params)
             if (notification & BT740_SPP_CONNECT_NOTIF) {
                 /* send packet */
 
-                /* start response timer */
+                /* send escape sequence */
+
+                /* disconnect */
+
+                /* ToDo: start response timer */
             }
 
             if (notification & BT740_SPP_NO_CARRIER_NOTIF) {
+                if(ctx.receive_cb) {
+                    ctx.receive_cb(false,NULL);
+                }
+                ctx.spp_connection_active = false;
+            }
+
+            if (notification & BT740_SPP_ERROR_NOTIF) {
                 if(ctx.receive_cb) {
                     ctx.receive_cb(false,NULL);
                 }
