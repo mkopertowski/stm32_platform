@@ -262,22 +262,22 @@ static void handleResponse(uint8_t *response)
 
     if(strncmp("OK", (char*)response, strlen("OK")) == 0) {
         if(ctx.cmd_response_cb) {
-            ctx.cmd_response_cb(true, ctx.response_queue);
+            ctx.cmd_response_cb(BT_CMD_STATUS_OK, ctx.response_queue);
             ctx.response_queue = NULL;
         }
     } else if(strncmp("ERROR", (char*)response, strlen("ERROR")) == 0) {
         if(ctx.cmd_response_cb) {
-            ctx.cmd_response_cb(false, ctx.response_queue);
+            ctx.cmd_response_cb(BT_CMD_STATUS_ERROR, ctx.response_queue);
             ctx.response_queue = NULL;
         }
     } else if(strncmp("CONNECT", (char*)response, strlen("CONNECT")) == 0) {
         if(ctx.cmd_response_cb) {
-            ctx.cmd_response_cb(true, NULL);
+            ctx.cmd_response_cb(BT_CMD_STATUS_CONNECTED, NULL);
             ctx.response_queue = NULL;
         }
     } else if(strncmp("NO CARRIER", (char*)response, strlen("NO CARRIER")) == 0) {
         if(ctx.cmd_response_cb) {
-            ctx.cmd_response_cb(false, NULL);
+            ctx.cmd_response_cb(BT_CMD_STATUS_NO_CARRIER, NULL);
             ctx.response_queue = NULL;
         }
     } else {

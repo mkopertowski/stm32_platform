@@ -12,7 +12,12 @@ typedef enum {
 uint16_t VirtAddVarTab[] = {
         0x0000,              /* 2 bytes, device type */
         0x0001,              /* 2 bytes, paired state */
-        0x0002,              /* 6 bytes, bt_address */
+        0x0002,              /* 6 bytes, 1 bt_address */
+        0x0003,              /*          2 bt_address */
+        0x0004,              /*          3 bt_address */
+        0x0005,              /*          4 bt_address */
+        0x0006,              /*          5 bt_address */
+        0x0007,              /*          6 bt_address */
 };
 
 void storage_init(void)
@@ -69,5 +74,4 @@ void storage_get_router_bt_address(uint8_t *bt_address)
     EE_ReadVariable(VirtAddVarTab[STORAGE_ADDRESS_ROUTER_BT_ADDRESS+4],&address[4]);
     EE_ReadVariable(VirtAddVarTab[STORAGE_ADDRESS_ROUTER_BT_ADDRESS+5],&address[5]);
 }
-
 

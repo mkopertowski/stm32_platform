@@ -31,7 +31,7 @@
 #include <storage.h>
 #include <io.h>
 
-#define DEBUG_ON
+//#define DEBUG_ON
 #include <debug.h>
 
 // Sample pragmas to cope with warnings. Please note the related line at

@@ -76,9 +76,15 @@ static void module_hitted(void)
     OS_TASK_NOTIFY(ctx.app_task, APP_MODULE_HITTED_NOTIF);
 }
 
+void bt_message_received(bool status, bt_packet_t *packet)
+{
+    OS_TASK_NOTIFY(ctx.app_task, APP_BT_MSG_RECEIVED_NOTIF);
+}
+
 void app_task(void *params)
 {
     bt_cmd_t cmd;
+    uint8_t bt_router_address[BT_ADDRESS_LENGTH+1];
 
     DEBUG_PRINTF("Application task started!\r\n");
 
@@ -98,6 +104,10 @@ void app_task(void *params)
     /* register module hit listener */
     io_module_hit_register_listener(module_hitted);
 
+    /* get router bluetooth address */
+    memset(bt_router_address,0,BT_ADDRESS_LENGTH+1);
+    storage_get_router_bt_address(bt_router_address);
+
     for (;;) {
         BaseType_t ret;
         uint32_t notification;
@@ -111,8 +121,11 @@ void app_task(void *params)
 
         if(notification & APP_BT_MODULE_READY_NOTIF) {
             DEBUG_PRINTF("APP: Bluetooth module is ready\r\n");
+
+            BT740_register_for_messages();
+
             cmd.type = BT_CMD_GET_FRIENDLY_NAME;
-            sprintf(cmd.params.bt_address,"%s","4040A7BE6AC8");
+            sprintf(cmd.params.bt_address,"%s",bt_router_address);
             BT740_sendCmd(&cmd, bt_module_respone);
         }
 
@@ -132,6 +145,11 @@ void app_task(void *params)
         if(notification & APP_MODULE_HITTED_NOTIF) {
             DEBUG_PRINTF("APP: Module hitted\r\n");
             /* ToDo: send notification to router */
+        }
+
+        if(notification & APP_BT_MSG_RECEIVED_NOTIF) {
+            DEBUG_PRINTF("APP: External message received\r\n");
+            /* ToDo */
         }
     }
 }
