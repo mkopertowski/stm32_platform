@@ -45,6 +45,7 @@ struct context {
     QueueHandle_t queue;
     TimerHandle_t bt740_setup_timer;
     bt_cmd_t cmd;
+    uint8_t cmdString[CMD_LENGTH_MAX];
     cmd_response_cb cmd_response_cb;
     response_queue_t *response_queue;
     response_queue_t *response_queue_tail;
@@ -234,24 +235,22 @@ static void bt740_ready(TimerHandle_t xTimer)
 
 static bool is_echoed_cmd(uint8_t *response)
 {
-    return (strncmp(commands[ctx.cmd.type].cmdString, (char*)response, strlen(commands[ctx.cmd.type].cmdString)) == 0);
+    return (strncmp(ctx.cmdString, (char*)response, strlen(ctx.cmdString)) == 0);
 }
 
 static void handleCmd(void)
 {
-    uint8_t cmd[CMD_LENGTH_MAX];
-
-    memset(cmd,0,CMD_LENGTH_MAX);
+    memset(ctx.cmdString,0,CMD_LENGTH_MAX);
     // send command to BT740 module
     switch(ctx.cmd.type) {
         case BT_CMD_GET_FRIENDLY_NAME:
-            sprintf(cmd,commands[ctx.cmd.type].cmdString,ctx.cmd.params.bt_address);
-            send_cmd_string(cmd);
+            sprintf(ctx.cmdString,commands[ctx.cmd.type].cmdString,ctx.cmd.params.bt_address);
             break;
         default:
-            send_cmd_string(commands[ctx.cmd.type].cmdString);
+            sprintf(ctx.cmdString,"%s",commands[ctx.cmd.type].cmdString);
             break;
     }
+    send_cmd_string(ctx.cmdString);
 }
 
 void BT740_register_for_state(state_cb cb)
