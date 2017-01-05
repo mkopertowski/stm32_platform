@@ -31,6 +31,8 @@
 #define QUEUE_MAX_ITEMS (5)
 #define QUEUE_ITEM_SIZE (RESPONSE_DATA_LENGTH)
 
+#define SPP_ESCPAE_SEQUENCE_STR ("^^^")
+
 typedef struct {
     char cmdString[CMD_LENGTH_MAX];
 } cmd_info_t;
@@ -117,6 +119,14 @@ void send_char(char c)
     while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET);
     USART_SendData(USART2, c);
     DEBUG_PRINTF("%c",c);
+}
+
+void send_buffer(uint8_t *data, uint8_t data_len)
+{
+    while(data_len) {
+        send_char(*data++);
+        data_len--;
+    }
 }
 
 void send_cmd_string(const char *s)
@@ -244,6 +254,7 @@ static void handleCmd(void)
     // send command to BT740 module
     switch(ctx.cmd.type) {
         case BT_CMD_GET_FRIENDLY_NAME:
+        case BT_CMD_SPP_START:
             sprintf(ctx.cmdString,commands[ctx.cmd.type].cmdString,ctx.cmd.params.bt_address);
             break;
         default:
@@ -354,8 +365,10 @@ void bt740_task(void *params)
 
             if (notification & BT740_SPP_CONNECT_NOTIF) {
                 /* send packet */
+                send_buffer(ctx.packet.data,ctx.packet.data_len);
 
                 /* send escape sequence */
+                send_buffer(SPP_ESCPAE_SEQUENCE_STR,sizeof(SPP_ESCPAE_SEQUENCE_STR));
 
                 /* disconnect */
 

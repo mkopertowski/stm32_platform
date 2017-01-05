@@ -132,11 +132,11 @@ void app_task(void *params)
             memcpy(packet.data,"DUPA",4);
             packet.data_len = 4;
 
-            //BT740_send_message(&packet);
+            BT740_send_message(&packet);
 
-            cmd.type = BT_CMD_GET_FRIENDLY_NAME;
+            /*cmd.type = BT_CMD_GET_FRIENDLY_NAME;
             sprintf(cmd.params.bt_address,"%s",bt_router_address);
-            BT740_sendCmd(&cmd, bt_module_respone);
+            BT740_sendCmd(&cmd, bt_module_respone);*/
         }
 
         if(notification & APP_BT_MODULE_RESPONSE_NOTIF) {
