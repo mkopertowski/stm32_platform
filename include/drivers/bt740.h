@@ -41,11 +41,13 @@ typedef struct {
 } bt_packet_t;
 
 typedef enum {
-    BT_CMD_STATUS_OK,
-    BT_CMD_STATUS_CONNECTED,
-    BT_CMD_STATUS_ERROR = 0x10,
-    BT_CMD_STATUS_NO_CARRIER,
-} bt_cmd_status_t;
+    BT_STATUS_OK,
+    BT_STATUS_CONNECTED,
+    BT_STATUS_RING,
+    BT_STATUS_DATA,
+    BT_STATUS_ERROR = 0x10,
+    BT_STATUS_NO_CARRIER,
+} bt_status_t;
 
 typedef struct response_queue {
     uint8_t data[RESPONSE_DATA_LENGTH];
@@ -53,7 +55,7 @@ typedef struct response_queue {
 } response_queue_t;
 
 typedef void (*msg_receive_cb)(bool status, bt_packet_t *packet);
-typedef void (*cmd_response_cb)(bt_cmd_status_t status, response_queue_t *resp);
+typedef void (*cmd_response_cb)(bt_status_t status, response_queue_t *resp);
 typedef void (*state_cb)(bt_state_t state);
 
 void BT740_init(void);

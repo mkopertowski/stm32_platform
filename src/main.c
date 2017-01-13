@@ -2,7 +2,6 @@
  * ToDO:
  * - pairing
  * - SPP receiving messages
- * - self and router address storing
  * - long press reset
  * - sending comands to router (I'm online, Module was hitted)
  * - router commands (hello, enable avalanche beacon)

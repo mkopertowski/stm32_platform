@@ -19,7 +19,7 @@
 struct context {
     TaskHandle_t app_task;
     response_queue_t *cmd_response;
-    bt_cmd_status_t cmd_status;
+    bt_status_t cmd_status;
     device_type_t device_type;
     bool send_message_status;
 };
@@ -35,7 +35,7 @@ void bt_module_state_cb(bt_state_t state)
     OS_TASK_NOTIFY(ctx.app_task, APP_BT_MODULE_READY_NOTIF);
 }
 
-static void bt_module_respone(bt_cmd_status_t status, response_queue_t *resp)
+static void bt_module_respone(bt_status_t status, response_queue_t *resp)
 {
     ctx.cmd_response = resp;
     ctx.cmd_status = status;
@@ -83,6 +83,12 @@ void bt_message_received(bool status, bt_packet_t *packet)
     OS_TASK_NOTIFY(ctx.app_task, APP_BT_MSG_RECEIVED_NOTIF);
 }
 
+static void handle_module_hitted(void)
+{
+    DEBUG_PRINTF("APP: Module hitted\r\n");
+
+}
+
 void app_task(void *params)
 {
     bt_cmd_t cmd;
@@ -127,6 +133,7 @@ void app_task(void *params)
             /* get ready to receive messages */
             BT740_register_for_messages(bt_message_received);
 
+            /*
             bt_packet_t packet;
 
             memcpy(packet.bt_address,bt_router_address,BT_ADDRESS_STR_LENGTH);
@@ -135,6 +142,7 @@ void app_task(void *params)
             packet.data_len = 4;
 
             BT740_send_message(&packet);
+*/
 
             /*cmd.type = BT_CMD_GET_FRIENDLY_NAME;
             sprintf(cmd.params.bt_address,"%s",bt_router_address);
@@ -155,8 +163,7 @@ void app_task(void *params)
         }
 
         if(notification & APP_MODULE_HITTED_NOTIF) {
-            DEBUG_PRINTF("APP: Module hitted\r\n");
-            /* ToDo: send notification to router */
+            handle_module_hitted();
         }
 
         if(notification & APP_BT_MSG_RECEIVED_NOTIF) {
