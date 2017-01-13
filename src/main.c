@@ -1,7 +1,7 @@
 /*
  * ToDO:
+ * - add storing bt address of received messages
  * - pairing
- * - SPP receiving messages
  * - long press reset
  * - sending comands to router (I'm online, Module was hitted)
  * - router commands (hello, enable avalanche beacon)
@@ -14,7 +14,7 @@
  * - button handling
  * - get friendly name (command)
  * - SPP sending messages protocol
- *
+ * - SPP receiving messages
  */
 #include <stdio.h>
 #include <stdlib.h>
