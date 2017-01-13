@@ -103,7 +103,7 @@ void app_task(void *params)
 
     /* get device type from storage */
     storage_get_device_type(&ctx.device_type);
-    DEBUG_PRINTF("Device type is %s, state:%s\r\n",(ctx.device_type ? "AVALANCHE_BEACON" : "AVALANCHE_ROUTER"),
+    DEBUG_PRINTF("Device type is %s, state:%s\r\n",((ctx.device_type == DEVICE_TYPE_AVALANCHE_BEACON)? "AVALANCHE_BEACON" : "AVALANCHE_ROUTER"),
                                                                (storage_is_paired() ? "PAIRED" : "NOT PAIRED"));
 
     /* register button state listener */
@@ -133,16 +133,16 @@ void app_task(void *params)
             /* get ready to receive messages */
             BT740_register_for_messages(bt_message_received);
 
-            /*
-            bt_packet_t packet;
+            if(ctx.device_type == DEVICE_TYPE_AVALANCHE_BEACON) {
+                bt_packet_t packet;
 
-            memcpy(packet.bt_address,bt_router_address,BT_ADDRESS_STR_LENGTH);
-            packet.data = (uint8_t*)malloc(4);
-            memcpy(packet.data,"DUPA",4);
-            packet.data_len = 4;
+                memcpy(packet.bt_address,bt_router_address,BT_ADDRESS_STR_LENGTH);
+                packet.data = (uint8_t*)malloc(4);
+                memcpy(packet.data,"DUPA",4);
+                packet.data_len = 4;
 
-            BT740_send_message(&packet);
-*/
+                BT740_send_message(&packet);
+            }
 
             /*cmd.type = BT_CMD_GET_FRIENDLY_NAME;
             sprintf(cmd.params.bt_address,"%s",bt_router_address);
