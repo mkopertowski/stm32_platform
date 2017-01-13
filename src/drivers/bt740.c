@@ -1,5 +1,5 @@
 /*
- * ORANGE GND
+e * ORANGE GND
  * BROWN  TX    A3(RX)
  * YELLOW RX    A2(TX)
  * BLUE   VCC
@@ -356,7 +356,7 @@ static void spp_escape(TimerHandle_t xTimer)
         BT740_sendCmd(&cmd,bt_spp_stop_respone);
         return;
     }
-    //send_buffer("^",1);
+    OS_TASK_NOTIFY(ctx.task, BT740_SEND_ESCAPE_CHAR_NOTIF);
     spp_escape_count--;
     xTimerStart(ctx.spp_escape_timer, 0 );
 }
@@ -369,9 +369,6 @@ void handle_spp_connection(uint32_t notification)
 
         /* send escape sequence */
         send_spp_escape_sequence();
-
-
-
         /* ToDo: start response timer */
     }
 
@@ -396,6 +393,9 @@ void handle_spp_connection(uint32_t notification)
         ctx.spp_connection_active = false;
     }
 
+    if(notification & BT740_SEND_ESCAPE_CHAR_NOTIF) {
+        send_buffer("^",1);
+    }
 }
 
 void bt740_task(void *params)
@@ -408,7 +408,7 @@ void bt740_task(void *params)
     ctx.queue = xQueueCreate(QUEUE_MAX_ITEMS, QUEUE_ITEM_SIZE);
 
     ctx.bt740_setup_timer = xTimerCreate("bt740_tim",pdMS_TO_TICKS(1500),false,(void *)&ctx ,bt740_ready);
-    ctx.spp_escape_timer = xTimerCreate("spp_tim",pdMS_TO_TICKS(130),false,(void *)&ctx ,spp_escape);
+    ctx.spp_escape_timer = xTimerCreate("spp_tim",pdMS_TO_TICKS(200),false,(void *)&ctx ,spp_escape);
 
     /* configure USART2 */
     usart_config();

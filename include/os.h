@@ -40,5 +40,6 @@
 #define BT740_SPP_NO_CARRIER_NOTIF        (1 << 14)
 #define BT740_SPP_ERROR_NOTIF             (1 << 15)
 #define BT740_SPP_DISCONNECT_NOTIF        (1 << 16)
+#define BT740_SEND_ESCAPE_CHAR_NOTIF      (1 << 17)
 
 #endif /* OS_H */
