@@ -34,12 +34,6 @@ typedef struct {
     bt_cmd_params_t params;
 } bt_cmd_t;
 
-typedef struct {
-    uint8_t bt_address[BT_ADDRESS_STR_LENGTH];
-    uint8_t *data;
-    uint8_t data_len;
-} bt_packet_t;
-
 typedef enum {
     BT_STATUS_OK,
     BT_STATUS_CONNECTED,
@@ -54,14 +48,16 @@ typedef struct response_queue {
     struct response_queue *next;
 } response_queue_t;
 
-typedef void (*msg_receive_cb)(bool status, bt_packet_t *packet);
+typedef void (*data_receive_cb)(bool status, uint8_t *data, uint8_t data_len);
 typedef void (*cmd_response_cb)(bt_status_t status, response_queue_t *resp);
 typedef void (*state_cb)(bt_state_t state);
 
 void BT740_init(void);
 void BT740_sendCmd(bt_cmd_t *cmd, cmd_response_cb cb);
-void BT740_register_for_messages(msg_receive_cb cb);
-void BT740_send_message(bt_packet_t *packet);
+void BT740_response_free(response_queue_t *resp);
+
+void BT740_register_for_spp_data(data_receive_cb cb);
+void BT740_send_spp_data(uint8_t bt_address[], uint8_t *data, uint8_t data_len);
 
 void BT740_register_for_state(state_cb cb);
 

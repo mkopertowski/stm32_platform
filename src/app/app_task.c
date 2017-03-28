@@ -13,7 +13,7 @@
 #include <storage.h>
 #include <io.h>
 
-#define DEBUG_ON
+//#define DEBUG_ON
 #include <debug.h>
 
 struct context {
@@ -77,10 +77,10 @@ static void module_hitted(void)
     OS_TASK_NOTIFY(ctx.app_task, APP_MODULE_HITTED_NOTIF);
 }
 
-void bt_message_received(bool status, bt_packet_t *packet)
+void spp_data_received(bool status, uint8_t *data, uint8_t data_len)
 {
     ctx.send_message_status = status;
-    OS_TASK_NOTIFY(ctx.app_task, APP_BT_MSG_RECEIVED_NOTIF);
+    OS_TASK_NOTIFY(ctx.app_task, APP_SPP_DATA_RECEIVED_NOTIF);
 }
 
 static void handle_module_hitted(void)
@@ -131,22 +131,14 @@ void app_task(void *params)
             DEBUG_PRINTF("APP: Bluetooth module is ready\r\n");
 
             /* get ready to receive messages */
-            BT740_register_for_messages(bt_message_received);
+            BT740_register_for_spp_data(spp_data_received);
 
             if(ctx.device_type == DEVICE_TYPE_AVALANCHE_BEACON) {
-                bt_packet_t packet;
-
-                memcpy(packet.bt_address,bt_router_address,BT_ADDRESS_STR_LENGTH);
-                packet.data = (uint8_t*)malloc(4);
-                memcpy(packet.data,"DUPA",4);
-                packet.data_len = 4;
-
-                BT740_send_message(&packet);
+                uint8_t *data;
+                data = malloc(4);
+                memcpy(data,"DUPA",4);
+                BT740_send_spp_data(bt_router_address,data,4);
             }
-
-            /*cmd.type = BT_CMD_GET_FRIENDLY_NAME;
-            sprintf(cmd.params.bt_address,"%s",bt_router_address);
-            BT740_sendCmd(&cmd, bt_module_respone);*/
         }
 
         if(notification & APP_BT_MODULE_RESPONSE_NOTIF) {
@@ -166,8 +158,8 @@ void app_task(void *params)
             handle_module_hitted();
         }
 
-        if(notification & APP_BT_MSG_RECEIVED_NOTIF) {
-            DEBUG_PRINTF("APP: External message received(status=%d)\r\n",ctx.send_message_status);
+        if(notification & APP_SPP_DATA_RECEIVED_NOTIF) {
+            //DEBUG_PRINTF("APP: External message received(status=%d)\r\n",ctx.send_message_status);
             /* ToDo */
         }
     }

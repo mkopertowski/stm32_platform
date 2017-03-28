@@ -40,21 +40,28 @@ typedef struct {
     uint8_t length;
 } response_t;
 
+typedef struct {
+    uint8_t bt_address[BT_ADDRESS_STR_LENGTH];
+    uint8_t *data;
+    uint8_t data_len;
+    TimerHandle_t escape_timer;
+    bool connection_active;
+    data_receive_cb receive_cb;
+    bt_status_t status;
+} spp_t;
+
 struct context {
     TaskHandle_t task;
     QueueHandle_t queue;
     TimerHandle_t bt740_setup_timer;
-    TimerHandle_t spp_escape_timer;
     bt_cmd_t cmd;
     bool processing_cmd;
     uint8_t cmdString[CMD_LENGTH_MAX];
     cmd_response_cb cmd_response_cb;
     response_queue_t *response_queue;
     response_queue_t *response_queue_tail;
-    msg_receive_cb receive_cb;
     state_cb module_state_cb;
-    bool spp_connection_active;
-    bt_packet_t packet;
+    spp_t spp;
 };
 
 static const cmd_info_t commands[] = {
@@ -147,16 +154,27 @@ void BT740_sendCmd(bt_cmd_t *cmd, cmd_response_cb cb)
     OS_TASK_NOTIFY(ctx.task, BT740_SEND_COMMAND_NOTIF);
 }
 
-void BT740_register_for_messages(msg_receive_cb cb)
+void BT740_register_for_spp_data(data_receive_cb cb)
 {
-    ctx.receive_cb = cb;
+    ctx.spp.receive_cb = cb;
+}
+
+void BT740_response_free(response_queue_t *resp)
+{
+    response_queue_t *p;
+
+    while(resp) {
+        p = resp;
+        resp = resp->next;
+        free(p);
+    }
 }
 
 static void bt_spp_start_respone(bt_status_t status, response_queue_t *resp)
 {
     switch(status) {
         case BT_STATUS_CONNECTED:
-            OS_TASK_NOTIFY(ctx.task, BT740_SPP_CONNECT_NOTIF);
+            OS_TASK_NOTIFY(ctx.task, BT740_SPP_CONNECTED_NOTIF);
             break;
         case BT_STATUS_ERROR:
             OS_TASK_NOTIFY(ctx.task, BT740_SPP_ERROR_NOTIF);
@@ -167,40 +185,32 @@ static void bt_spp_start_respone(bt_status_t status, response_queue_t *resp)
         default:
             break;
     }
+    BT740_response_free(resp);
 }
 
 static void bt_spp_stop_respone(bt_status_t status, response_queue_t *resp)
 {
-    switch(status) {
-        case BT_STATUS_OK:
-            OS_TASK_NOTIFY(ctx.task, BT740_SPP_DISCONNECT_NOTIF);
-            break;
-        case BT_STATUS_ERROR:
-            //OS_TASK_NOTIFY(ctx.task, BT740_SPP_ERROR_NOTIF);
-            break;
-        case BT_STATUS_NO_CARRIER:
-            //OS_TASK_NOTIFY(ctx.task, BT740_SPP_NO_CARRIER_NOTIF);
-            break;
-        default:
-            break;
-    }
+    ctx.spp.status = status;
+    OS_TASK_NOTIFY(ctx.task, BT740_SPP_DISCONNECT_NOTIF);
+    BT740_response_free(resp);
 }
 
-
-void BT740_send_message(bt_packet_t *packet)
+void BT740_send_spp_data(uint8_t bt_address[], uint8_t *data, uint8_t data_len)
 {
     bt_cmd_t cmd;
 
-    if(ctx.spp_connection_active) {
+    if(ctx.spp.connection_active) {
         return;
     } else {
-        ctx.spp_connection_active = true;
+        ctx.spp.connection_active = true;
     }
 
-    memcpy(&ctx.packet,packet,sizeof(bt_packet_t));
+    ctx.spp.data_len = data_len;
+    ctx.spp.data = data;
+    memcpy(ctx.spp.bt_address,bt_address,BT_ADDRESS_STR_LENGTH);
 
     cmd.type = BT_CMD_SPP_START;
-    sprintf(cmd.params.bt_address,"%s",packet->bt_address);
+    sprintf(cmd.params.bt_address,"%s",bt_address);
 
     BT740_sendCmd(&cmd,bt_spp_start_respone);
 
@@ -288,6 +298,13 @@ void BT740_register_for_state(state_cb cb)
     ctx.module_state_cb = cb;
 }
 
+static spp_stop(void)
+{
+    bt_cmd_t cmd;
+    cmd.type = BT_CMD_SPP_STOP;
+    BT740_sendCmd(&cmd,bt_spp_stop_respone);
+}
+
 static void handleResponse(uint8_t *response)
 {
     if(ctx.processing_cmd && is_echoed_cmd(response)) {
@@ -298,7 +315,9 @@ static void handleResponse(uint8_t *response)
     DEBUG_PRINTF("Received:%s\r\n",response);
 
     if(strncmp("OK", (char*)response, strlen("OK")) == 0) {
-        if(ctx.cmd_response_cb) {
+        if(ctx.spp.connection_active) {
+            spp_stop();
+        } else if(ctx.cmd_response_cb) {
             ctx.cmd_response_cb(BT_STATUS_OK, ctx.response_queue);
             ctx.response_queue = NULL;
             ctx.cmd_response_cb = NULL;
@@ -316,9 +335,9 @@ static void handleResponse(uint8_t *response)
             ctx.cmd_response_cb(BT_STATUS_CONNECTED, NULL);
             ctx.response_queue = NULL;
             ctx.cmd_response_cb = NULL;
-        } else if (ctx.spp_connection_active) {
-            if(ctx.receive_cb) {
-                ctx.receive_cb(BT_STATUS_CONNECTED,NULL);
+        } else if (ctx.spp.connection_active) {
+            if(ctx.spp.receive_cb) {
+                ctx.spp.receive_cb(BT_STATUS_CONNECTED,NULL,0);
             }
         }
         ctx.processing_cmd = false;
@@ -327,30 +346,30 @@ static void handleResponse(uint8_t *response)
             ctx.cmd_response_cb(BT_STATUS_NO_CARRIER, NULL);
             ctx.response_queue = NULL;
             ctx.cmd_response_cb = NULL;
-        } else if (ctx.spp_connection_active) {
-            if(ctx.receive_cb) {
-                ctx.receive_cb(BT_STATUS_NO_CARRIER,NULL);
+        } else if (ctx.spp.connection_active) {
+            if(ctx.spp.receive_cb) {
+                ctx.spp.receive_cb(BT_STATUS_NO_CARRIER,NULL,0);
             }
         }
         ctx.processing_cmd = false;
     } else if(strncmp("RING", (char*)response, strlen("RING")) == 0) {
-        ctx.spp_connection_active = true;
-        if(ctx.receive_cb) {
-            ctx.receive_cb(BT_STATUS_RING,NULL);
+        ctx.spp.connection_active = true;
+        if(ctx.spp.receive_cb) {
+            ctx.spp.receive_cb(BT_STATUS_RING,NULL,0);
         }
     } else {
         response_queue_t *item;
 
-        if(ctx.spp_connection_active) {
+        if(ctx.spp.connection_active) {
             uint8_t len = strlen(response);
 
-            ctx.packet.data = malloc(len+1);
-            if(!ctx.packet.data) {
+            ctx.spp.data = malloc(len+1);
+            if(!ctx.spp.data) {
                 return;
             }
-            sprintf(ctx.packet.data,"%s",response);
-            ctx.packet.data_len = len;
-            ctx.receive_cb(BT_STATUS_DATA,&ctx.packet);
+            sprintf(ctx.spp.data,"%s",response);
+            ctx.spp.data_len = len;
+            ctx.spp.receive_cb(BT_STATUS_DATA,ctx.spp.data,ctx.spp.data_len);
         } else {
             item = (response_queue_t*)malloc(sizeof(response_queue_t));
             if(!item) {
@@ -381,56 +400,50 @@ static volatile uint8_t spp_escape_count;
 static void send_spp_escape_sequence(void)
 {
     spp_escape_count = 3;
-    xTimerStart(ctx.spp_escape_timer, 0 );
+    xTimerStart(ctx.spp.escape_timer, 0 );
 }
 
 static void spp_escape(TimerHandle_t xTimer)
 {
     if(spp_escape_count == 0) {
-        /* escape sequence finished -> disconnect */
-        bt_cmd_t cmd;
-        cmd.type = BT_CMD_SPP_STOP;
-        BT740_sendCmd(&cmd,bt_spp_stop_respone);
         return;
     }
-    OS_TASK_NOTIFY(ctx.task, BT740_SEND_ESCAPE_CHAR_NOTIF);
+    OS_TASK_NOTIFY(ctx.task, BT740_SPP_SEND_ESCAPE_CHAR_NOTIF);
     spp_escape_count--;
-    xTimerStart(ctx.spp_escape_timer, 0 );
+    xTimerStart(ctx.spp.escape_timer, 0 );
 }
 
 void handle_spp_connection(uint32_t notification)
 {
-    if (notification & BT740_SPP_CONNECT_NOTIF) {
-        /* send packet */
-        send_buffer(ctx.packet.data,ctx.packet.data_len);
-
+    if (notification & BT740_SPP_CONNECTED_NOTIF) {
+        /* send data */
+        send_buffer(ctx.spp.data,ctx.spp.data_len);
         /* send escape sequence */
         send_spp_escape_sequence();
         /* ToDo: start response timer */
     }
 
+    if ((notification & BT740_SPP_ERROR_NOTIF) ||
+        (notification & BT740_SPP_NO_CARRIER_NOTIF)) {
+        if(ctx.spp.receive_cb) {
+            ctx.spp.receive_cb(false,NULL,0);
+        }
+        ctx.spp.connection_active = false;
+    }
+
     if (notification & BT740_SPP_DISCONNECT_NOTIF) {
-        if(ctx.receive_cb) {
-            ctx.receive_cb(true,NULL);
+        if(ctx.spp.receive_cb) {
+            bool status = false;
+
+            if(ctx.spp.status == BT_STATUS_OK) {
+                status = true;
+            }
+            ctx.spp.receive_cb(status,NULL,0);
         }
-        ctx.spp_connection_active = false;
+        ctx.spp.connection_active = false;
     }
 
-    if (notification & BT740_SPP_NO_CARRIER_NOTIF) {
-        if(ctx.receive_cb) {
-            ctx.receive_cb(false,NULL);
-        }
-        ctx.spp_connection_active = false;
-    }
-
-    if (notification & BT740_SPP_ERROR_NOTIF) {
-        if(ctx.receive_cb) {
-            ctx.receive_cb(false,NULL);
-        }
-        ctx.spp_connection_active = false;
-    }
-
-    if(notification & BT740_SEND_ESCAPE_CHAR_NOTIF) {
+    if(notification & BT740_SPP_SEND_ESCAPE_CHAR_NOTIF) {
         send_buffer("^",1);
     }
 }
@@ -445,7 +458,7 @@ void bt740_task(void *params)
     ctx.queue = xQueueCreate(QUEUE_MAX_ITEMS, QUEUE_ITEM_SIZE);
 
     ctx.bt740_setup_timer = xTimerCreate("bt740_tim",pdMS_TO_TICKS(1500),false,(void *)&ctx ,bt740_ready);
-    ctx.spp_escape_timer = xTimerCreate("spp_tim",pdMS_TO_TICKS(200),false,(void *)&ctx ,spp_escape);
+    ctx.spp.escape_timer = xTimerCreate("spp_tim",pdMS_TO_TICKS(200),false,(void *)&ctx ,spp_escape);
 
     /* configure USART2 */
     usart_config();

@@ -31,15 +31,16 @@
 #define APP_SHORT_PRESS_NOTIF             (1 << 3)
 #define APP_LONG_PRESS_NOTIF              (1 << 4)
 #define APP_MODULE_HITTED_NOTIF           (1 << 5)
-#define APP_BT_MSG_RECEIVED_NOTIF         (1 << 6)
+#define APP_SPP_DATA_RECEIVED_NOTIF       (1 << 6)
 
 #define BT740_RESPONSE_WAITING_NOTIF      (1 << 10)
 #define BT740_SETUP_DONE_NOTIF            (1 << 11)
 #define BT740_SEND_COMMAND_NOTIF          (1 << 12)
-#define BT740_SPP_CONNECT_NOTIF           (1 << 13)
+
+#define BT740_SPP_CONNECTED_NOTIF         (1 << 13)
 #define BT740_SPP_NO_CARRIER_NOTIF        (1 << 14)
 #define BT740_SPP_ERROR_NOTIF             (1 << 15)
 #define BT740_SPP_DISCONNECT_NOTIF        (1 << 16)
-#define BT740_SEND_ESCAPE_CHAR_NOTIF      (1 << 17)
+#define BT740_SPP_SEND_ESCAPE_CHAR_NOTIF  (1 << 17)
 
 #endif /* OS_H */
