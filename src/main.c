@@ -25,7 +25,6 @@
 
 #include "stm32f10x.h"
 
-#include <bt740.h>
 #include <eeprom.h>
 #include <os.h>
 #include <storage.h>
@@ -55,9 +54,6 @@ int main(int argc, char* argv[])
 
     /* init flash data storage */
     storage_init();
-
-    /* init BT740 bluetooth module */
-    BT740_init();
 
     xTaskCreate(app_task, "app_task", 512, NULL, OS_TASK_PRIORITY, NULL);
 
