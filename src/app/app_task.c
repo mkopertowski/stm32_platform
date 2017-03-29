@@ -11,6 +11,8 @@
 #include <os.h>
 #include <storage.h>
 #include <io.h>
+#include <font.h>
+#include <SSD1306.h>
 
 //#define DEBUG_ON
 #include <debug.h>
@@ -54,6 +56,10 @@ void app_task(void *params)
 
     /* register button state listener */
     io_button_register_listener(button_state_listener);
+
+    SSD1306_Init();
+    SSD1306_Draw_Text("muyittin",10,1,Tahoma16,1);
+    SSD1306_Draw_Circle(32,64,15,1,0);
 
     for (;;) {
         BaseType_t ret;

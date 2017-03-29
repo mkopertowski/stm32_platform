@@ -19,7 +19,7 @@ void debug_init(void)
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1 | RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE);
     USART_Cmd(USART1, ENABLE);
 
-    usartConfig.USART_BaudRate = 9600;
+    usartConfig.USART_BaudRate = 115200;
     usartConfig.USART_WordLength = USART_WordLength_8b;
     usartConfig.USART_StopBits = USART_StopBits_1;
     usartConfig.USART_Parity = USART_Parity_No;
