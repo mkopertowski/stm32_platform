@@ -29,6 +29,7 @@
 #include <os.h>
 #include <storage.h>
 #include <io.h>
+#include <spi.h>
 
 //#define DEBUG_ON
 #include <debug.h>
@@ -54,6 +55,9 @@ int main(int argc, char* argv[])
 
     /* init flash data storage */
     storage_init();
+
+    /* Init SPI for LCD */
+    Init_SPI1();
 
     xTaskCreate(app_task, "app_task", 512, NULL, OS_TASK_PRIORITY, NULL);
 
