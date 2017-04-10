@@ -58,6 +58,7 @@ int main(int argc, char* argv[])
 
     /* Init SPI for LCD */
     Init_SPI1();
+    SSD1306_Init();
 
     xTaskCreate(app_task, "app_task", 512, NULL, OS_TASK_PRIORITY, NULL);
 
