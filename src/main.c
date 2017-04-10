@@ -30,6 +30,7 @@
 #include <storage.h>
 #include <io.h>
 #include <spi.h>
+#include <ADS1115.h>
 
 #define DEBUG_ON
 #include <debug.h>

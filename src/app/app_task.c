@@ -57,9 +57,7 @@ void app_task(void *params)
     /* register button state listener */
     io_button_register_listener(button_state_listener);
 
-    SSD1306_Init();
-    SSD1306_Draw_Text("muyittin",10,1,Tahoma16,1);
-    SSD1306_Draw_Circle(32,64,15,1,0);
+    SSD1306_Draw_Text("1.23     1.05",10,1,Tahoma16,2);
 
     for (;;) {
         BaseType_t ret;
