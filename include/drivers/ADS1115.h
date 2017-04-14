@@ -7,19 +7,6 @@
 #define high_reg                                                                         0
 #define low_reg                                                                          1
 
-/*
-
-#define addr_pin_tied_to_GND                                                             0x90
-#define addr_pin_tied_to_VDD                                                             0x92
-#define addr_pin_tied_to_SDA                                                             0x94
-#define addr_pin_tied_to_SCL                                                             0x96
-
-#define ADS1115_device_address                                                           addr_pin_tied_to_GND
-#define ADS1115_write_cmd                                                                ADS1115_device_address
-#define ADS1115_read_cmd                                                                 (ADS1115_device_address + 1)
-
-
-
 #define start_one_conversion                                                             0x8000
 
 #define AINP_AIN0__AINN_AIN1                                                             0x0000
@@ -32,13 +19,13 @@
 #define AINP_AIN3__AINN_GND                                                              0x7000
 
 #define FS_6144mV                                                                        0x0000
-#define FS_4096mV                                                                        0x0200
-#define FS_2048mV                                                                        0x0400
-#define FS_1024mV                                                                        0x0600
-#define FS_512mV                                                                         0x0800
-#define FS_256mV                                                                         0x0A00
-#define FS_256mV                                                                         0x0C00
-#define FS_256mV                                                                         0x0E00
+//#define FS_4096mV                                                                        0x0200
+//#define FS_2048mV                                                                        0x0400
+//#define FS_1024mV                                                                        0x0600
+//#define FS_512mV                                                                         0x0800
+//#define FS_256mV                                                                         0x0A00
+//#define FS_256mV                                                                         0x0C00
+//#define FS_256mV                                                                         0x0E00
 
 #define continuous_conversion_mode                                                       0x0000
 #define power_down_single_shot_mode                                                      0x0100
@@ -67,7 +54,6 @@
 #define disable_comparator                                                               0x0003
 
 #define ADC_count_max                                                                    0x7FFF
-*/
 
 void ADS1115_init();
 void ADS1115_write(unsigned char pointer, unsigned int value);

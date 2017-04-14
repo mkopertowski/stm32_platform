@@ -61,6 +61,9 @@ int main(int argc, char* argv[])
     Init_SPI1();
     SSD1306_Init();
 
+    /* A/D */
+    ADS1115_init();
+
     xTaskCreate(app_task, "app_task", 512, NULL, OS_TASK_PRIORITY, NULL);
 
     /* Start the scheduler. */

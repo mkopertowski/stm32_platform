@@ -52,7 +52,7 @@ static void button_press(TimerHandle_t xTimer)
 
 static void io_init_button(void)
 {
-    ctx.button_timer = xTimerCreate("bt740_tim",pdMS_TO_TICKS(BUTTON_LONG_PRESS_TIMEOUT),false,(void *)&ctx ,button_press);
+    ctx.button_timer = xTimerCreate("button_tim",pdMS_TO_TICKS(BUTTON_LONG_PRESS_TIMEOUT),false,(void *)&ctx ,button_press);
 
     // Enable GPIO Peripheral clock
     RCC_APB2PeriphClockCmd(IO_RCC_MASKx(BUTTON_PORT_NUMBER), ENABLE);

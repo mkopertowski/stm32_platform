@@ -43,4 +43,6 @@
 #define BT740_SPP_DISCONNECT_NOTIF        (1 << 16)
 #define BT740_SPP_SEND_ESCAPE_CHAR_NOTIF  (1 << 17)
 
+#define APP_ADS1115_READY_NOTIF           (1 << 18)
+
 #endif /* OS_H */
