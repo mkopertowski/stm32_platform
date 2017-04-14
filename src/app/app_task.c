@@ -11,8 +11,7 @@
 #include <os.h>
 #include <storage.h>
 #include <io.h>
-#include <font.h>
-#include <SSD1306.h>
+#include <disp.h>
 #include <ADS1115.h>
 
 #define DEBUG_ON
@@ -50,7 +49,7 @@ static void handle_module_hitted(void)
     DEBUG_PRINTF("APP: Module hitted\r\n");
 }
 
-static void handle_app_timer(void)
+static void handle_app_timer(TimerHandle_t xTimer)
 {
     OS_TASK_NOTIFY(ctx.app_task, APP_ADS1115_READY_NOTIF);
 }
@@ -64,7 +63,7 @@ void app_task(void *params)
     /* register button state listener */
     io_button_register_listener(button_state_listener);
 
-    SSD1306_Draw_Text("1.23     1.07",10,1,Tahoma16,2);
+    DSP_vInit();
 
     ctx.app_timer = xTimerCreate("app_tim",pdMS_TO_TICKS(1000),false,(void *)&ctx ,handle_app_timer);
     xTimerStart(ctx.app_timer, 0 );

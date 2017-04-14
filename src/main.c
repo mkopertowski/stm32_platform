@@ -35,13 +35,6 @@
 #define DEBUG_ON
 #include <debug.h>
 
-// Sample pragmas to cope with warnings. Please note the related line at
-// the end of this function, used to pop the compiler diagnostics status.
-#pragma GCC diagnostic push
-//#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wmissing-declarations"
-#pragma GCC diagnostic ignored "-Wreturn-type"
-
 void app_task(void *params);
 
 int main(int argc, char* argv[])
@@ -59,7 +52,6 @@ int main(int argc, char* argv[])
 
     /* Init SPI for LCD */
     Init_SPI1();
-    SSD1306_Init();
 
     /* A/D */
     ADS1115_init();
