@@ -118,8 +118,6 @@ void SSD1316_Clear(void)
 {
     for(SSD1306_Counter=0;SSD1306_Counter<1024;SSD1306_Counter++)
         SSD1306_Buffer[SSD1306_Counter]=0x00;
-
-    SSD1316_Refresh();
 }
 
 void SSD1316_Refresh(void)
@@ -147,11 +145,6 @@ void SSD1306_Pixel(unsigned char x, unsigned char y, unsigned char Colour)
         SSD1306_Buffer[ArrayPos] |= 1 << (y % 8);
     else
         SSD1306_Buffer[ArrayPos] &= 0xFF ^ 1 << (y % 8);
-}
-
-void SSD1306_LoadBuffer(void)
-{
-    SSD1316_Refresh();
 }
 
 void SSD1306_Draw_Line(int x1, int y1, int x2, int y2, char Colour)
@@ -219,8 +212,6 @@ void SSD1306_Draw_Line(int x1, int y1, int x2, int y2, char Colour)
       x += xinc2;                       // Change the x as appropriate
       y += yinc2;                       // Change the y as appropriate
     }
-
-    SSD1306_LoadBuffer();
 }
 
 Bounding_Box_T SSD1306_Draw_Char(unsigned char c, unsigned char x, unsigned char y, const unsigned char *font)
@@ -277,8 +268,6 @@ Bounding_Box_T SSD1306_Draw_Char(unsigned char c, unsigned char x, unsigned char
     ret.Y2 = ret.Y1 + height;
     ret.Y2 = ret.Y1 + font[FONT_HEADER_HEIGHT];
 
-    SSD1306_LoadBuffer();
-
     return ret;
 }
 
@@ -302,7 +291,6 @@ Bounding_Box_T SSD1306_Draw_Text(char *string, unsigned char x, unsigned char y,
     ret.X2 = tmp.X2;
     ret.Y2 = tmp.Y2;
 
-    SSD1306_LoadBuffer();
     return ret;
 }
 
@@ -370,6 +358,5 @@ void SSD1306_Draw_Circle(unsigned char centre_x, unsigned char centre_y, unsigne
             SSD1306_Pixel(centre_x + y, centre_y + x, colour);
             SSD1306_Pixel(centre_x + x, centre_y + y, colour);
         }
-        SSD1306_LoadBuffer();
     }
 }

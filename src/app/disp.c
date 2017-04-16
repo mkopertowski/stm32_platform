@@ -59,16 +59,14 @@ void DSP_vInit(void)
 
 void DSP_vShowDisplay(E_DSP_ID eDispId)
 {
-    //LCD_vClear();
+    SSD1316_Clear();
 
-    SSD1306_Draw_Text("1.23     1.07",10,1,Tahoma16,2);
+    vShowStaticTexts(eDispId);
 
-    //vShowStaticTexts(eDispId);
-
-    //vShowDynamicContent(eDispId);
+    vShowDynamicContent(eDispId);
 
     // send virtual display to LCD
-    //LCD_vUpdate();
+    SSD1316_Refresh();
 }
 
 void DSP_vShowTimerDisplay(E_DSP_ID eDispId, uint8_t   ui8Seconds)

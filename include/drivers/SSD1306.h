@@ -69,7 +69,6 @@ extern void SSD1306_Invert(unsigned char Invert);
 extern void SSD1306_Init(void);
 
 extern void SSD1306_Pixel(unsigned char x, unsigned char y, unsigned char Colour);
-extern void SSD1306_LoadBuffer(void);
 void SSD1306_Draw_Line(int x1, int y1, int x2, int y2, char Colour);
 Bounding_Box_T SSD1306_Draw_Char(unsigned char c, unsigned char x, unsigned char y, const unsigned char *font);
 Bounding_Box_T SSD1306_Draw_Text(char *string, unsigned char x, unsigned char y, const unsigned char *font, unsigned char spacing);
