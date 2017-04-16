@@ -20,6 +20,9 @@
 #define DISPLAY_LINE_COUNT    3
 #define DISPLAY_SOFTKEY_COUNT 2
 
+#define FONT_SPACING 2
+#define FONT_HEIGHT 20
+
 const uint8_t aDisplayDef[] =
 {
 
@@ -93,22 +96,23 @@ static void vShowStaticTexts(E_DSP_ID eDspId)
 {
     uint8_t ui8StartPos;
     uint8_t x,y;
-    char pString;
-/*
+    char *pString;
+
     // show display texts
     ui8StartPos = eDspId * DISPLAY_LINE_COUNT;
     for(y=0;y<DISPLAY_LINE_COUNT;y++)
     {
-        pString = TXT_pcGetText(&aDisplayDef[ui8StartPos+y]));
+        pString = TXT_pcGetText(aDisplayDef[ui8StartPos+y]);
         if(pString)
         {
-            SSD1306_Draw_Text(pString,)
-              x = LCD_ui8GetStringPosForAlignment(pString,LCD_STYLE_CENTER | DISPLAY_BOLD_FONT);
-            LCD_vGotoXY(x,y);
-            LCD_vPuts_P(pString,DISPLAY_BOLD_FONT);
+            SSD1306_Draw_Text(pString,0,y*FONT_HEIGHT,Tahoma16,FONT_SPACING);
+            //x = LCD_ui8GetStringPosForAlignment(pString,LCD_STYLE_CENTER | DISPLAY_BOLD_FONT);
+            //LCD_vGotoXY(x,y);
+            //LCD_vPuts_P(pString,DISPLAY_BOLD_FONT);
         }
     }
 
+/*
     // show softkeys
     ui8StartPos = eDspId * DISPLAY_SOFTKEY_COUNT;
     // left softkey
