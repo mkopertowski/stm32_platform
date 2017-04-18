@@ -105,7 +105,7 @@ static void vShowStaticTexts(E_DSP_ID eDspId)
         pString = TXT_pcGetText(aDisplayDef[ui8StartPos+y]);
         if(pString)
         {
-            SSD1306_Draw_Text(pString,0,y*FONT_HEIGHT,Tahoma16,FONT_SPACING);
+            SSD1306_Draw_Text(pString,1,1+y*FONT_HEIGHT,Tahoma16,FONT_SPACING);
             //x = LCD_ui8GetStringPosForAlignment(pString,LCD_STYLE_CENTER | DISPLAY_BOLD_FONT);
             //LCD_vGotoXY(x,y);
             //LCD_vPuts_P(pString,DISPLAY_BOLD_FONT);

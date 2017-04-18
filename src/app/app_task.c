@@ -64,6 +64,7 @@ void app_task(void *params)
     io_button_register_listener(button_state_listener);
 
     DSP_vInit();
+    DSP_vShowDisplay(DSP_ID_STARTUP);
 
     ctx.app_timer = xTimerCreate("app_tim",pdMS_TO_TICKS(1000),false,(void *)&ctx ,handle_app_timer);
     xTimerStart(ctx.app_timer, 0 );
