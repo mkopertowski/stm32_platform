@@ -304,7 +304,9 @@ Bounding_Box_T SSD1306_Draw_Aligned_Text(char *string, unsigned char align, unsi
     {
         length += SSD1306_GetPixelLength_Char(*tmp_string++, font);
         // Leave a single space between characters
-        length += spacing;
+        if(*tmp_string != 0) {
+            length += spacing;
+        }
     }
 
     switch(align) {
@@ -312,7 +314,7 @@ Bounding_Box_T SSD1306_Draw_Aligned_Text(char *string, unsigned char align, unsi
             x = 1;
             break;
         case ALIGN_CENTER:
-            x = (SSD1306_LCDWIDTH-length)/2;
+            x = 1+(SSD1306_LCDWIDTH-length)/2;
             break;
         case ALIGN_RIGHT:
             x = SSD1306_LCDWIDTH-length;

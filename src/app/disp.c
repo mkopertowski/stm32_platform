@@ -109,24 +109,20 @@ static void vShowStaticTexts(E_DSP_ID eDspId)
         }
     }
 
-/*
     // show softkeys
     ui8StartPos = eDspId * DISPLAY_SOFTKEY_COUNT;
     // left softkey
-    pString = TXT_pcGetText(pgm_read_byte(&aSoftKeysDef[ui8StartPos]));
+    pString = TXT_pcGetText(aSoftKeysDef[ui8StartPos]);
     if(pString)
     {
-        LCD_vGotoXY(0,DISPLAY_LINE_COUNT);
-        LCD_vPuts_P(pString,LCD_STYLE_INVERSE);
+        SSD1306_Draw_Aligned_Text(pString,ALIGN_LEFT,SSD1306_LCDHEIGHT-14-2,Tahoma14,FONT_SPACING);
     }
     // right softkey
-    pString = TXT_pcGetText(pgm_read_byte(&aSoftKeysDef[ui8StartPos+1]));
+    pString = TXT_pcGetText(aSoftKeysDef[ui8StartPos+1]);
     if(pString)
     {
-        LCD_vGotoXY(x,DISPLAY_LINE_COUNT);
-        LCD_vPuts_P(pString,LCD_STYLE_INVERSE);
+        SSD1306_Draw_Aligned_Text(pString,ALIGN_RIGHT,SSD1306_LCDHEIGHT-14-2,Tahoma14,FONT_SPACING);
     }
-*/
 }
 
 static void vShowDynamicContent(E_DSP_ID eDispId)
