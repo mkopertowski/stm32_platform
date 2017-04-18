@@ -5,6 +5,7 @@
 #define WHITE   1
 #define INVERSE 2
 
+/* display coordinate start with 1 i.e. 1-64 and 1-128 */
 #define SSD1306_LCDWIDTH    128
 #define SSD1306_LCDHEIGHT   64
 
@@ -52,6 +53,10 @@
 #define FONT_TYPE_PROPORTIONAL                          1
 #define FONT_ORIENTATION_VERTICAL_CEILING               2
 
+#define ALIGN_LEFT   0
+#define ALIGN_CENTER 1
+#define ALIGN_RIGHT  2
+
 typedef struct {
     unsigned char X1;
     unsigned char Y1;
@@ -72,6 +77,7 @@ extern void SSD1306_Pixel(unsigned char x, unsigned char y, unsigned char Colour
 void SSD1306_Draw_Line(int x1, int y1, int x2, int y2, char Colour);
 Bounding_Box_T SSD1306_Draw_Char(unsigned char c, unsigned char x, unsigned char y, const unsigned char *font);
 Bounding_Box_T SSD1306_Draw_Text(char *string, unsigned char x, unsigned char y, const unsigned char *font, unsigned char spacing);
+Bounding_Box_T SSD1306_Draw_Aligned_Text(char *string, unsigned char align, unsigned char y, const unsigned char *font, unsigned char spacing);
 extern void SSD1306_Draw_Rectangle(int x1, int y1, int x2, int y2, char colour);
 extern void SSD1306_Draw_Circle(unsigned char centre_x, unsigned char centre_y, unsigned char radius, unsigned char colour, unsigned char filled);
 

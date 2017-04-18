@@ -214,6 +214,25 @@ void SSD1306_Draw_Line(int x1, int y1, int x2, int y2, char Colour)
     }
 }
 
+uint8_t SSD1306_GetPixelLength_Char(unsigned char c, const unsigned char *font)
+{
+    unsigned short  pos;
+    unsigned char   width;
+
+    // Adjust for start position of font vs. the char passed
+    c -= font[FONT_HEADER_START];
+
+    // Work out where in the array the character is
+    pos = font[c * FONT_HEADER_START + 5];
+    pos <<= 8;
+    pos |= font[c * FONT_HEADER_START + 6];
+
+    // Read first byte from this position, this gives letter width
+    width = font[pos];
+
+    return width;
+}
+
 Bounding_Box_T SSD1306_Draw_Char(unsigned char c, unsigned char x, unsigned char y, const unsigned char *font)
 {
     unsigned short  pos;
@@ -267,6 +286,52 @@ Bounding_Box_T SSD1306_Draw_Char(unsigned char c, unsigned char x, unsigned char
     //       font.
     ret.Y2 = ret.Y1 + height;
     ret.Y2 = ret.Y1 + font[FONT_HEADER_HEIGHT];
+
+    return ret;
+}
+
+Bounding_Box_T SSD1306_Draw_Aligned_Text(char *string, unsigned char align, unsigned char y, const unsigned char *font, unsigned char spacing)
+{
+    Bounding_Box_T ret,tmp;
+    char *tmp_string = string;
+    uint8_t length = 0;
+    uint8_t x;
+
+    spacing += 1;
+
+    /* get text width */
+    while (*tmp_string != 0)
+    {
+        length += SSD1306_GetPixelLength_Char(*tmp_string++, font);
+        // Leave a single space between characters
+        length += spacing;
+    }
+
+    switch(align) {
+        case ALIGN_LEFT:
+            x = 1;
+            break;
+        case ALIGN_CENTER:
+            x = (SSD1306_LCDWIDTH-length)/2;
+            break;
+        case ALIGN_RIGHT:
+            x = SSD1306_LCDWIDTH-length;
+            break;
+    }
+
+    ret.Y1 = y;
+    ret.X1 = x;
+
+    // BUG: As we move right between chars we don't actually wipe the space
+    while (*string != 0)
+    {
+        tmp = SSD1306_Draw_Char(*string++, x, y, font);
+        // Leave a single space between characters
+        x = tmp.X2 + spacing;
+    }
+
+    ret.X2 = tmp.X2;
+    ret.Y2 = tmp.Y2;
 
     return ret;
 }
