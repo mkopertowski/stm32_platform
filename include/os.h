@@ -26,13 +26,9 @@
                 ret; \
         })
 
-#define APP_BT_MODULE_READY_NOTIF         (1 << 1)
-#define APP_BT_MODULE_RESPONSE_NOTIF      (1 << 2)
-#define APP_SHORT_PRESS_NOTIF             (1 << 3)
-#define APP_LONG_PRESS_NOTIF              (1 << 4)
-#define APP_MODULE_HITTED_NOTIF           (1 << 5)
-#define APP_SPP_DATA_RECEIVED_NOTIF       (1 << 6)
+#define APP_SHORT_PRESS_NOTIF             (1 << 1)
+#define APP_LONG_PRESS_NOTIF              (1 << 2)
 
-#define MES_READ_O2CELLS_NOTIF            (1 << 18)
+#define MES_READ_O2CELLS_NOTIF            (1 << 10)
 
 #endif /* OS_H */

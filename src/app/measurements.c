@@ -92,7 +92,7 @@ void MES_vInit(void)
     xTaskCreate(MES_task, "mes_task", 512, NULL, OS_TASK_PRIORITY, NULL);
 }
 
-static void handle_app_timer(TimerHandle_t xTimer)
+static void handle_reado2cells_timer(TimerHandle_t xTimer)
 {
     OS_TASK_NOTIFY(ctx.task_handle, MES_READ_O2CELLS_NOTIF);
 }
@@ -116,7 +116,7 @@ void MES_task(void *params)
 
     ctx.task_handle = xTaskGetCurrentTaskHandle();
 
-    ctx.timer = xTimerCreate("mes_tim",pdMS_TO_TICKS(GL_O2CELLS_MEASURE_INTERVAL_MS),false,(void *)&ctx ,handle_app_timer);
+    ctx.timer = xTimerCreate("mes_tim",pdMS_TO_TICKS(GL_O2CELLS_MEASURE_INTERVAL_MS),false,(void *)&ctx ,handle_reado2cells_timer);
     xTimerStart(ctx.timer, 0 );
 
     for (;;) {
