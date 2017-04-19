@@ -10,13 +10,9 @@ typedef enum {
 
 void storage_init(void);
 
-void storage_set_device_type(device_type_t type);
-void storage_get_device_type(device_type_t *type);
+uint16_t storage_get_sensorCalibrationFactor(uint8_t cellNr);
+void storage_set_sensorCalibrationFactor(uint8_t cellNr, uint16_t val);
 
-void storage_set_paired_state(bool paired);
-bool storage_is_paired(void);
-
-void storage_set_router_bt_address(uint8_t *bt_address);
-void storage_get_router_bt_address(uint8_t *bt_address);
+bool storage_isSensorEnabled(uint8_t cellNr);
 
 #endif

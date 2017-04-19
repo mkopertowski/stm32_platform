@@ -23,7 +23,7 @@
 //#define FS_2048mV                                                                        0x0400
 //#define FS_1024mV                                                                        0x0600
 //#define FS_512mV                                                                         0x0800
-//#define FS_256mV                                                                         0x0A00
+#define FS_256mV                                                                         0x0A00
 //#define FS_256mV                                                                         0x0C00
 //#define FS_256mV                                                                         0x0E00
 

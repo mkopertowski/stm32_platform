@@ -13,6 +13,7 @@
 #include <io.h>
 #include <disp.h>
 #include <ADS1115.h>
+#include <measurements.h>
 
 #define DEBUG_ON
 #include <debug.h>
@@ -22,7 +23,7 @@ struct context {
     TimerHandle_t app_timer;
 };
 
-struct context ctx = { 0 };
+static struct context ctx = { 0 };
 
 static void button_state_listener(io_button_state_t state)
 {
@@ -68,6 +69,8 @@ void app_task(void *params)
 
     ctx.app_timer = xTimerCreate("app_tim",pdMS_TO_TICKS(1000),false,(void *)&ctx ,handle_app_timer);
     xTimerStart(ctx.app_timer, 0 );
+
+    MES_vInit();
 
     for (;;) {
         BaseType_t ret;
