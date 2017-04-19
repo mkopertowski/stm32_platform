@@ -10,13 +10,14 @@
 #include <task.h>
 #include <queue.h>
 #include <timers.h>
-#include <drivers/ADS1115.h>
-#include <app/measurements.h>
 
-#include <storage.h>
 #include <global.h>
 #include <config.h>
 #include <os.h>
+
+#include <storage.h>
+
+#include <drivers/ADS1115.h>
 
 #define DEBUG_ON
 #include <debug.h>
@@ -42,9 +43,6 @@
 
 //***** DEFINES ***************************************************************
 #define MES_NR_OF_MEASUREMENTS    5   ///< configurations
-#define MES_SINGLE_MEASURE_TIME   25  ///< time of single measurement in ms
-#define MES_DEFAULT_ADC_GAIN      8   ///< this gain gives range +-256mV
-
 #define MES_CELL_MIN              640 ///< oxygen cell minimum value (5mV)
 
 typedef struct {
@@ -59,7 +57,6 @@ struct context {
     TaskHandle_t task_handle;
     TimerHandle_t timer;
 
-    bool bMeasureStarted;
     uint8_t ui8CurrentCellNr;
     uint8_t ui8MesurementNr;
     ST_O2SENSOR sensor[GL_NR_OF_O2CELLS];
@@ -67,12 +64,9 @@ struct context {
 
 static struct context ctx = { 0 };
 
-//***** LOCAL VARIABLES *******************************************************
-static uint32_t          ui32MeasureReadyTime;
-
 //***** STATIC FUNCTIONS DECLARATIONS *****************************************
 static uint16_t ui16CalculateMeanForSensor(uint8_t);
-static void startMeasure(uint8_t);
+static void reado2Cell(uint8_t);
 
 void MES_task(void *params);
 
@@ -80,7 +74,6 @@ void MES_vInit(void)
 {
     uint8_t ui8CellNr;
 
-    ctx.bMeasureStarted = false;
     ctx.ui8CurrentCellNr= 0;
     ctx.ui8MesurementNr = 0;
 
@@ -99,58 +92,48 @@ void MES_vInit(void)
     xTaskCreate(MES_task, "mes_task", 512, NULL, OS_TASK_PRIORITY, NULL);
 }
 
+static void handle_app_timer(TimerHandle_t xTimer)
+{
+    OS_TASK_NOTIFY(ctx.task_handle, MES_READ_O2CELLS_NOTIF);
+}
+
+static void handleReado2Cells(void)
+{
+    uint8_t i;
+
+    /* read o2 cells */
+    for(i=0;i<GL_NR_OF_O2CELLS;i++) {
+        reado2Cell(i);
+    }
+
+    /* restart timer to read cells in a while */
+    xTimerStart(ctx.timer,0);
+}
+
 void MES_task(void *params)
 {
     uint16_t ui16val;
 
-    if(ctx.bMeasureStarted)
-    {
-        //if(ui32MeasureReadyTime<SYS_ui32GetSytemTime())
-        {
-            //if(ADS_bRead(&ui16val))
-            {
-                //ai16Measurements[ui8CurrentCellNr][ui8MesurementNr] = ui16val;
-                DEBUG_PRINTF("measure ready=%u, cel=%d\n",ui16val,ctx.ui8CurrentCellNr);
+    ctx.task_handle = xTaskGetCurrentTaskHandle();
 
-                // check if read value is withing correct range
-                //bCorrectCellRange[ui8CurrentCellNr] = (MES_CELL_MIN<ui16val) ? true : false;
+    ctx.timer = xTimerCreate("mes_tim",pdMS_TO_TICKS(GL_O2CELLS_MEASURE_INTERVAL_MS),false,(void *)&ctx ,handle_app_timer);
+    xTimerStart(ctx.timer, 0 );
 
-                ctx.bMeasureStarted = false;
+    for (;;) {
+        BaseType_t ret;
+        uint32_t notification;
 
-                // go to next sensor
-                ctx.ui8CurrentCellNr++;
+        /* Wait on any of the event group bits, then clear them all */
+        ret = xTaskNotifyWait(0, OS_TASK_NOTIFY_MASK, &notification, pdMS_TO_TICKS(50));
 
-                if(ctx.ui8CurrentCellNr == GL_NR_OF_O2CELLS)
-                {
-                    // start from the first sensor (zero based)
-                    ctx.ui8CurrentCellNr = 0;
-                    // go to next measurent
-                    ctx.ui8MesurementNr++;
-                    //DEBUG_PRINTF("SEN1=%d, SEN2=%d, SEN3=%d\n",ctx.ai16Measurements[0][ctx.ui8MesurementNr-1],ctx.ai16Measurements[1][ctx.ui8MesurementNr-1],ctx.ai16Measurements[2][ctx.ui8MesurementNr-1]);
-                    if(ctx.ui8MesurementNr == MES_NR_OF_MEASUREMENTS)
-                    {
-                        // all measurements done, start from the beggining
-                        ctx.ui8MesurementNr = 0;
-                    }
-                }
-            }
-            //else
-            {
-                // retry mechanism for measurements!
-                //if((ui32MeasureReadyTime + MES_SINGLE_MEASURE_TIME)<SYS_ui32GetSytemTime())
-                {
-                    // measurement not ready but it should be
-                    ctx.bMeasureStarted = false;
-                    //DEBUG("measure retry\n");
-                }
-            }
+        if(ret != pdPASS) {
+            continue;
         }
-    }
-    else
-    {
-        startMeasure(ctx.ui8CurrentCellNr);
-        ctx.bMeasureStarted = true;
-        DEBUG_PRINTF("measure started\n");
+
+        if(notification & MES_READ_O2CELLS_NOTIF) {
+            DEBUG_PRINTF("MES: Reading o2 cells\r\n");
+            handleReado2Cells();
+        }
     }
 }
 
@@ -161,7 +144,7 @@ void MES_vCalibrateSensorsInOxygen(void)
     uint32_t val;
     uint16_t ui16AtmPressure = 1013;
 
-    //ui16AtmPressure = EE_ui16GetAtmospherePressure();
+    ui16AtmPressure = storage_get_atmospherePressure();
 
     for(ui8SensorNr=0;ui8SensorNr<GL_NR_OF_O2CELLS;ui8SensorNr++)
     {
@@ -177,11 +160,11 @@ void MES_vCalibrateSensorsInOxygen(void)
 
         ui16CalibrationFactor = (uint16_t) val;
 
-        //DEBUG("cel=%d, F=%d at atm. pressure %d\n",ui8SensorNr,ui16CalibrationFactor,ui16AtmPressure);
+        DEBUG_PRINTF("cel=%d, F=%d at atm. pressure %d\n",ui8SensorNr,ui16CalibrationFactor,ui16AtmPressure);
         // the factor is the output in mV for
         // 100% i.e 1ATA of oxygen
         // store in eeprom
-        //EE_vSensorCalibrationFactorSAVE(ui8SensorNr,ui16CalibrationFactor);
+        storage_set_sensorCalibrationFactor(ui8SensorNr,ui16CalibrationFactor);
         // set new calibration facotrs for application
         ctx.sensor[ui8SensorNr].aui16CalibrationFactor = ui16CalibrationFactor;
     }
@@ -213,12 +196,12 @@ void MES_vCalculateReadings(void)
     for(ui8SensorNr=0;ui8SensorNr<GL_NR_OF_O2CELLS;ui8SensorNr++)
     {
         val = ui16CalculateMeanForSensor(ui8SensorNr);
-        //DEBUG("cel=%d, mean=%u\n",ui8SensorNr,val);
+        DEBUG_PRINTF("cel=%d, mean=%u\n",ui8SensorNr,val);
         val = val * 100;
         val = val / ctx.sensor[ui8SensorNr].aui16CalibrationFactor;
 
         ctx.sensor[ui8SensorNr].aui8OxygenReading = (uint8_t)val;
-        //DEBUG("reading=%u\n",val);
+        DEBUG_PRINTF("reading=%u\n",val);
     }
 }
 
@@ -286,7 +269,7 @@ static uint16_t ui16CalculateMeanForSensor(uint8_t ui8SensorNr)
     return ui16output;
 }
 
-static void startMeasure(uint8_t ui8CellNr)
+static void reado2Cell(uint8_t ui8CellNr)
 {
     unsigned int channel = AINP_AIN0__AINN_GND;
     uint8_t i;

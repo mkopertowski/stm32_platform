@@ -6,14 +6,15 @@ typedef enum {
     STORAGE_ADDRESS_CELL1_CALIBRATION_FACTOR,
     STORAGE_ADDRESS_CELL2_CALIBRATION_FACTOR,
     STORAGE_ADDRESS_CELL_ENABLED,
+    STORAGE_ADDRESS_ATM_PRESSURE,
 } storage_address_t;
 
 /* Virtual address defined by the user: 0xFFFF value is prohibited */
 uint16_t VirtAddVarTab[] = {
-        0x0000,              /* 2 bytes, cell 1 calibration factor */
-        0x0001,              /* 2 bytes, cell 2 calibration factor */
-        0x0002,
-        0x0003,
+        0x0000,              /* 2bytes, cell 1 calibration factor */
+        0x0001,              /* 2bytes, cell 2 calibration factor */
+        0x0002,              /* 2bytes, cell1, cell2 enabled */
+        0x0003,              /* 2bytes, atm pressure */
         0x0004,
         0x0005,
         0x0006,
@@ -42,6 +43,21 @@ void storage_set_sensorCalibrationFactor(uint8_t cellNr, uint16_t val)
 {
     EE_WriteVariable(VirtAddVarTab[STORAGE_ADDRESS_CELL1_CALIBRATION_FACTOR]+cellNr, val);
 }
+
+uint16_t storage_get_atmospherePressure(void)
+{
+    uint16_t tmp_val;
+
+    EE_ReadVariable(VirtAddVarTab[STORAGE_ADDRESS_ATM_PRESSURE],(uint16_t*)&tmp_val);
+
+    return tmp_val;
+}
+
+void storage_set_atmospherePressure(uint16_t val)
+{
+    EE_WriteVariable(VirtAddVarTab[STORAGE_ADDRESS_ATM_PRESSURE], val);
+}
+
 
 bool storage_isSensorEnabled(uint8_t cellNr)
 {

@@ -52,7 +52,7 @@ static void handle_module_hitted(void)
 
 static void handle_app_timer(TimerHandle_t xTimer)
 {
-    OS_TASK_NOTIFY(ctx.app_task, APP_ADS1115_READY_NOTIF);
+    //OS_TASK_NOTIFY(ctx.app_task, APP_ADS1115_READY_NOTIF);
 }
 
 void app_task(void *params)
@@ -96,11 +96,13 @@ void app_task(void *params)
             handle_module_hitted();
         }
 
+        /*
         if(notification & APP_ADS1115_READY_NOTIF) {
             unsigned int channel = AINP_AIN0__AINN_GND;
             ADS1115_configure(start_one_conversion | channel | FS_6144mV | power_down_single_shot_mode | data_rate_860SPS | disable_comparator);
             DEBUG_PRINTF("ADS1115: value=%d\r\n", ADS1115_read(ADS1115_conversion_reg_pointer));
             xTimerStart(ctx.app_timer, 0 );
         }
+        */
     }
 }

@@ -13,6 +13,9 @@ void storage_init(void);
 uint16_t storage_get_sensorCalibrationFactor(uint8_t cellNr);
 void storage_set_sensorCalibrationFactor(uint8_t cellNr, uint16_t val);
 
+uint16_t storage_get_atmospherePressure(void);
+void storage_set_atmospherePressure(uint16_t val);
+
 bool storage_isSensorEnabled(uint8_t cellNr);
 
 #endif
