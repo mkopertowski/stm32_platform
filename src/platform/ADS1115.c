@@ -1,6 +1,6 @@
+#include <platform/ADS1115.h>
 #include <stm32f10x_conf.h>
 #include <stm32f10x_i2c.h>
-#include <ADS1115.h>
 
 #define addr_pin_tied_to_GND      (0x48 << 1)
 #define addr_pin_tied_to_VDD      (0x49 << 1)

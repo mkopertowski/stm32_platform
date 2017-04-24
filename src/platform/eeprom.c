@@ -22,7 +22,7 @@
   */ 
 
 /* Includes ------------------------------------------------------------------*/
-#include <eeprom.h>
+#include <platform/eeprom.h>
 #include "stm32f10x_flash.h"
 
 /* Private typedef -----------------------------------------------------------*/

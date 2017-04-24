@@ -14,10 +14,10 @@
 #include <global.h>
 #include <config.h>
 #include <os.h>
+#include <platform/ADS1115.h>
 
 #include <storage.h>
 
-#include <drivers/ADS1115.h>
 
 #define DEBUG_ON
 #include <debug.h>

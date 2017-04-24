@@ -25,12 +25,12 @@
 
 #include "stm32f10x.h"
 
-#include <eeprom.h>
 #include <os.h>
+#include <platform/ADS1115.h>
+#include <platform/eeprom.h>
+#include <platform/io.h>
+#include <platform/spi.h>
 #include <storage.h>
-#include <io.h>
-#include <spi.h>
-#include <ADS1115.h>
 
 #define DEBUG_ON
 #include <debug.h>

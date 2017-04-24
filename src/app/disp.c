@@ -7,10 +7,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <drivers/SSD1306.h>
-#include <font.h>
 #include <app/texts.h>
 #include <app/disp.h>
+#include <platform/font.h>
+#include <platform/SSD1306.h>
 //#include <app/measurements.h>
 //#include <app/app.h>
 

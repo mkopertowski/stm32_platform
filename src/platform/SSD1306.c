@@ -1,7 +1,7 @@
+#include <platform/font.h>
+#include <platform/SSD1306.h>
 #include <stdlib.h>
 #include <stm32f10x.h>
-#include <SSD1306.h>
-#include <font.h>
 
 #define SSD1306_RES_ON      GPIO_WriteBit(GPIOA,GPIO_Pin_0,Bit_SET);        //RC0
 #define SSD1306_RES_OFF     GPIO_WriteBit(GPIOA,GPIO_Pin_0,Bit_RESET);

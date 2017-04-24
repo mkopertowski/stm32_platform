@@ -11,11 +11,11 @@
 
 #include <os.h>
 #include <config.h>
-#include <sys.h>
 #include <storage.h>
-#include <io.h>
 #include <disp.h>
 #include <measurements.h>
+#include <platform/io.h>
+#include <platform/sys.h>
 
 #define DEBUG_ON
 #include <debug.h>

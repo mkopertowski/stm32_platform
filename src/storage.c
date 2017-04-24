@@ -1,6 +1,6 @@
+#include <platform/eeprom.h>
 #include <stm32f10x_flash.h>
 #include <storage.h>
-#include <eeprom.h>
 
 typedef enum {
     STORAGE_ADDRESS_CELL1_CALIBRATION_FACTOR,

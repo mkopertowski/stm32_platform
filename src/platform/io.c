@@ -1,7 +1,9 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <platform/io.h>
 #include "stm32f10x.h"
 #include "stm32f10x_exti.h"
-#include <io.h>
-
 #include "FreeRTOS.h"
 #include "timers.h"
 
