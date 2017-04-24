@@ -151,3 +151,7 @@ void io_module_hit_register_listener(io_module_hit_cb_t cb)
     ctx.module_hit_listener = cb;
 }
 
+void io_set_headup_led(uint8_t color, uint8_t state)
+{
+
+}

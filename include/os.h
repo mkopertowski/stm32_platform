@@ -26,9 +26,12 @@
                 ret; \
         })
 
-#define APP_SHORT_PRESS_NOTIF             (1 << 1)
-#define APP_LONG_PRESS_NOTIF              (1 << 2)
+#define APP_SHORT_PRESS_LEFT_KEY_NOTIF   (1 << 1)
+#define APP_LONG_PRESS_LEFT_KEY_NOTIF    (1 << 2)
+#define APP_SHORT_PRESS_RIGHT_KEY_NOTIF  (1 << 3)
+#define APP_LONG_PRESS_RIGHT_KEY_NOTIF   (1 << 4)
+#define APP_TIMEOUT_NOTIF                (1 << 5)
 
-#define MES_READ_O2CELLS_NOTIF            (1 << 10)
+#define MES_READ_O2CELLS_NOTIF           (1 << 10)
 
 #endif /* OS_H */

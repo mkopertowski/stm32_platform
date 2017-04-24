@@ -63,3 +63,23 @@ bool storage_isSensorEnabled(uint8_t cellNr)
 {
     return true;
 }
+
+storge_set_sensorEnable(uint8_t cellNr, bool enabled)
+{
+    //EE_WriteVariable(VirtAddVarTab[STORAGE_ADDRESS_ATM_PRESSURE], val);
+}
+
+bool storage_is_diveMode(void)
+{
+    return false;
+}
+
+void storage_set_diveMode(bool val)
+{
+
+}
+
+uint16_t storage_get_batteryMonitorFactor(void)
+{
+    return 123;
+}

@@ -17,5 +17,11 @@ uint16_t storage_get_atmospherePressure(void);
 void storage_set_atmospherePressure(uint16_t val);
 
 bool storage_isSensorEnabled(uint8_t cellNr);
+void storge_set_sensorEnable(uint8_t cellNr, bool enabled);
+
+bool storage_is_diveMode(void);
+void storage_set_diveMode(bool val);
+
+uint16_t storage_get_batteryMonitorFactor(void);
 
 #endif
