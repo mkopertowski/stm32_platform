@@ -76,7 +76,7 @@ static bool bPeriodicTasks(uint16_t period)
     return false;
 }
 
-static void button_state_listener(io_button_state_t state)
+static void left_button_state_listener(io_button_state_t state)
 {
     switch(state) {
         case IO_BUTTON_SHORT_PRESS:
@@ -91,6 +91,22 @@ static void button_state_listener(io_button_state_t state)
     }
 }
 
+static void right_button_state_listener(io_button_state_t state)
+{
+    switch(state) {
+        case IO_BUTTON_SHORT_PRESS:
+            OS_TASK_NOTIFY(ctx.task_handle, APP_SHORT_PRESS_RIGHT_KEY_NOTIF);
+            break;
+        case IO_BUTTON_LONG_PRESS:
+            OS_TASK_NOTIFY(ctx.task_handle, APP_LONG_PRESS_RIGHT_KEY_NOTIF);
+            break;
+        default:
+            DEBUG_PRINTF("APP: Unknown button state\r\n");
+            break;
+    }
+}
+
+
 static void handle_display_update_timer(TimerHandle_t xTimer)
 {
     OS_TASK_NOTIFY(ctx.task_handle, MES_READ_O2CELLS_NOTIF);
@@ -104,8 +120,9 @@ void app_task(void *params)
 
     ctx.eAppState = APP_ST_INIT;
 
-    /* register button state listener */
-    io_button_register_listener(button_state_listener);
+    /* register button state listeners */
+    io_left_button_register_listener(left_button_state_listener);
+    io_right_button_register_listener(right_button_state_listener);
 
     DSP_vInit();
     DSP_vShowDisplay(DSP_ID_STARTUP_QUESTION);

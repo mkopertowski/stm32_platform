@@ -23,11 +23,9 @@ typedef void (*io_module_hit_cb_t)(void);
 void io_init(void);
 
 void io_set_led_state(bool state);
-void io_button_register_listener(io_button_pressed_cb_t cb);
+void io_left_button_register_listener(io_button_pressed_cb_t cb);
+void io_right_button_register_listener(io_button_pressed_cb_t cb);
 
 void io_set_headup_led(uint8_t color, uint8_t state);
-
-void io_set_avalnache_beacon_state(bool state);
-void io_module_hit_register_listener(io_module_hit_cb_t cb);
 
 #endif // IO_H
